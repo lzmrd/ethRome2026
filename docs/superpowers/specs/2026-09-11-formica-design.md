@@ -1,11 +1,11 @@
-# Formica — Design Document (v0.1)
+# Formica — Design Document (v0.2)
 
 - **Data:** 2026-09-11, ~20:30 Europe/Rome
 - **Evento:** ETHRome 2026, Urbe Hub (hacking window aperta dalle 18:00 di ven 11)
 - **Deadline submission:** dom 13 settembre 10:00 Europe/Rome (nessuna estensione)
 - **Team:** 1 persona (solo)
 - **Repo:** `ethRome2026` (pubblico, MIT). L'unico commit esistente è lo scaffold del repo, fatto dopo l'apertura della finestra (19:49); tutto il codice prodotto qui è nuovo.
-- **Stato:** bozza per adversarial review. Nessuna implementazione iniziata.
+- **Stato:** v0.2 — adversarial review applicata (vedi §17). Nessuna implementazione iniziata.
 
 ---
 
@@ -38,7 +38,7 @@
 
 ### Flussi (tutti con tx reali)
 
-1. **Claim namespace** — l'utente ottiene `mario.formica.eth`: viene deployato un `UserRegistry` ENSv2 personale (di cui è root) e il nome `mario` viene registrato nel registry di `formica.eth` puntando al suo registry.
+1. **Claim namespace** — l'utente ottiene `mario.formica.eth`: deploya un `UserRegistry` ENSv2 personale (di cui è root) e chiama `FormicaRegistrar.claim("mario", ...)`, che registra il nome nel registry di `formica.eth` puntando al suo registry. Nessun backend, nessuna chiave admin in gioco.
 2. **Crea goal** — es. "Vacanza", target 500 USDC, moltiplicatore x3, modalità Yield. Due passi: deploy del `GoalVault` su Fuji + subname ENSv2 `vacanza.mario.formica.eth` con record (indirizzo vault su Fuji via coinType, modalità, moltiplicatore, target).
 3. **Spesa con round-up** — checkout "Caffè 4.30 USDC": la UI calcola `roundUp = (5.00 − 4.30) × 3 = 2.10`, addebito totale 6.40. Una sola tx: il merchant riceve 4.30, il vault riceve 2.10 (share al risparmiatore) e, se in modalità Yield, li deposita su Aave.
 4. **Entrata con round-down** — "Stipendio 104.30 USDC": si arrotonda per difetto, la differenza `0.30 × moltiplicatore` va al goal, il destinatario incassa il resto. Una sola tx.
@@ -50,7 +50,7 @@
 
 - Niente carte, banche, Plaid, fiat on/off-ramp: i pagamenti sono checkout in-app con test USDC.
 - Niente smart account ERC-4337, niente gas sponsorship.
-- Niente seconda strategia di yield: solo Aave V3 Fuji + modalità Liquid. L'interfaccia adapter è pronta, ma non dichiariamo allocazioni o protocolli che non esistono.
+- Niente seconda strategia di yield: solo Aave V3 Fuji + modalità Liquid. Niente adapter astratto (vedi §16); non dichiariamo allocazioni o protocolli che non esistono.
 - Niente profili Conservative/Balanced/Degen finti: le due modalità reali sono **Liquid** (0 rischio protocollo) e **Yield** (Aave).
 - Niente token, niente fee, niente mainnet, niente audit.
 - Niente multi-utente/social, niente notifiche, niente app mobile.
@@ -66,7 +66,7 @@
 | 2 | Team | Solo → scope minimo, fallback obbligatori |
 | 3 | Origine pagamenti | Checkout merchant in-app; **anche** round-down sulle entrate |
 | 4 | Nomi ENS | Spazio utente sotto il nostro nome padre (`*.formica.eth`) |
-| 5 | Architettura | Vault ERC-4626 per-goal + router + adapter (Approach A) |
+| 5 | Architettura | Vault ERC-4626 per-goal + router (Approach A; adapter rimosso in v0.2, il vault chiama Aave direttamente) |
 | 6 | Nome progetto | **Formica** (nome padre: `formica.eth`, fallback `formica-savings.eth` / `formicaapp.eth`) |
 
 ---
@@ -83,10 +83,12 @@
 │ FUJI 43113 (money)  │   │ SEPOLIA (naming)          │   │ SWARM (stretch, storage)      │
 │                     │   │                           │   │                               │
 │ GoalVaultFactory ──► GoalVault (ERC-4626)            │   │ estratto conto/ricevute JSON  │
-│ PaymentRouter       │   │ formica.eth               │   │ cifrate client-side, upload   │
-│ AaveV3Strategy      │   │  └ UserRegistry (utente)  │   │ via Swarm ID, bzz hash nel    │
-│ TestUSDC            │   │     └ goal subname        │   │ text record ENS               │
-│ Aave V3 Pool        │   │       + resolver record   │   │                               │
+│ PaymentRouter       │   │ FormicaRegistrar (ruolo   │   │ cifrate client-side, upload   │
+│ USDC (Circle)       │   │   registrar su formica.eth)│  │ via Swarm ID, bzz hash nel    │
+│ Aave V3 Pool ◄──────┤   │ formica.eth               │   │ text record ENS               │
+│  (chiamato dal vault)│  │  └ UserRegistry (utente)  │   │                               │
+│                     │   │     └ goal subname        │   │                               │
+│                     │   │       + resolver record   │   │                               │
 └─────────────────────┘   └───────────────────────────┘   └───────────────────────────────┘
 ```
 
@@ -102,43 +104,49 @@ Solidity ^0.8.24, Foundry, OpenZeppelin. Deploy diretto (niente proxy/clone): su
 
 ### 5.1 `GoalVault` (ERC-4626)
 
-Un obiettivo = un vault. Custodisce test USDC, opzionalmente li mette su Aave.
+Un obiettivo = un vault. Custodisce USDC, opzionalmente li mette su Aave chiamando **direttamente** il Pool (nessun adapter intermedio).
 
 ```solidity
-contract GoalVault is ERC4626, Ownable {
+contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
     enum Mode { LIQUID, YIELD }
 
-    IStrategy public immutable strategy;   // adapter Aave, fissato alla nascita
-    IERC20    public immutable yieldToken; // aUSDC
-    string    public label;                // "vacanza" (mirror del subname ENS)
-    Mode      public mode;
-    uint8     public multiplier;           // 1..10
-    uint256   public target;               // in USDC (6 dec)
+    IPool   public immutable POOL;    // Aave V3 Pool, Fuji
+    IERC20  public immutable A_TOKEN; // aUSDC
+    string  public label;             // "vacanza" (mirror del subname ENS)
+    Mode    public mode;
+    uint8   public multiplier;        // 1..10
+    uint256 public target;            // in USDC (6 dec)
 
     function totalAssets() public view override returns (uint256);
-        // asset.balanceOf(this) + strategy.totalAssets(address(this))
+        // asset.balanceOf(this) + A_TOKEN.balanceOf(this)   (aToken 1:1 sull'underlying)
+
+    function maxDeposit(address receiver) public view override returns (uint256);
+    function maxMint(address receiver) public view override returns (uint256);
+        // 0 se receiver != owner(): solo l'owner detiene share del proprio goal
 
     function setMultiplier(uint8 m) external onlyOwner; // 1..10
     function setTarget(uint256 t) external onlyOwner;
     function setMode(Mode m) external onlyOwner nonReentrant; // migra i fondi
 
-    function _deposit(...) internal override;  // super + strategy.supply
-    function _withdraw(...) internal override; // strategy.withdraw se serve + super
+    function _deposit(...) internal override;  // super; se YIELD: POOL.supply(asset, assets, address(this), 0)
+    function _withdraw(...) internal override; // se l'idle non basta: POOL.withdraw(asset, mancante, address(this)); poi super
 }
 ```
 
 - **Modalità Liquid:** gli USDC restano nel vault, zero rischio protocollo.
-- **Modalità Yield:** il vault trasferisce gli USDC all'adapter, che li deposita su Aave; gli aUSDC sono **custoditi dal vault**. `totalAssets` include gli aUSDC, quindi il prezzo delle share cresce con lo yield.
+- **Modalità Yield:** il vault fa `POOL.supply(..., onBehalfOf = address(this))` e riceve gli aUSDC; `POOL.withdraw(..., to = address(this))` brucia gli aUSDC del vault stesso (`msg.sender`). Nessun trasferimento di aToken. `totalAssets` include gli aUSDC, quindi il prezzo delle share cresce con lo yield.
 - **Cambio modalità:** migration atomica idle↔Aave, owner-only, `nonReentrant`.
-- **Prelievo sempre possibile** (finché Aave ha liquidità, che su testnet è il caso normale): `redeem` → withdraw da Aave → USDC all'utente.
+- **Solo l'owner detiene share:** `maxDeposit`/`maxMint` restituiscono 0 per qualsiasi `receiver` diverso dall'owner, quindi nessuno può depositare nel goal di un altro (né direttamente né via router) e il progresso verso il target conta solo i soldi dell'owner.
+- **Prelievo sempre possibile** finché Aave ha liquidità. I nostri depositi *sono* liquidità del pool (su Fuji la liquidità libera oltre la nostra è ~120 USDC), quindi il redeem dei nostri fondi non resta bloccato salvo che qualcuno li prenda in prestito.
 - Access control: owner = utente. Nessun admin esterno, nessuna fee, nessuna pausa.
 
 ### 5.2 `GoalVaultFactory`
 
 ```solidity
 contract GoalVaultFactory {
-    IERC20    public immutable asset;
-    IStrategy public immutable strategy;
+    IERC20 public immutable asset;   // USDC (Circle) Fuji
+    IPool  public immutable POOL;    // Aave V3 Pool Fuji
+    IERC20 public immutable A_TOKEN; // aUSDC Fuji
     mapping(address => address[]) public goalsOf;
     mapping(address => bool) public isVault;
 
@@ -170,9 +178,10 @@ contract PaymentRouter is ReentrancyGuard {
 }
 ```
 
-**`payWithRoundUp`** (msg.sender = pagatore):
+**`payWithRoundUp`** (msg.sender = pagatore = risparmiatore):
 ```
 require(FACTORY.isVault(vault) && amount > 0)
+require(GoalVault(vault).owner() == payer)   // si risparmia solo nei propri goal
 m       = GoalVault(vault).multiplier()
 roundUp = ceil1(amount) - amount
 saving  = roundUp * m
@@ -199,33 +208,28 @@ ASSET.forceApprove(vault, saving); GoalVault(vault).deposit(saving, recipient)
 - Casi di test obbligatori: importo tondo, 0.01, 4.30, 104.30, 1.99 con x10, moltiplicatore 1 e 10, amount 0 (revert), vault non registrato (revert).
 - Lo **step è fisso a 1 USDC**; step configurabile è fuori scope (annotato come estensione futura).
 
-### 5.5 `IStrategy` e `AaveV3Strategy`
+### 5.5 Integrazione Aave V3 (diretta, niente adapter)
 
-Adapter **stateless**: il vault detiene gli aUSDC, l'adapter fa da ponte verso il Pool.
+Indirizzi Fuji verificati il 2026-09-11 da `bgd-labs/aave-address-book` (`AaveV3Fuji.sol`) e con `cast` on-chain:
 
-```solidity
-interface IStrategy {
-    function supply(address vault, uint256 amount) external;
-    function withdraw(address vault, uint256 amount) external;
-    function totalAssets(address vault) external view returns (uint256);
-    function yieldToken() external view returns (address);
-}
+| Contratto | Indirizzo |
+|---|---|
+| Aave V3 Pool | `0x8B9b2AF4afB389b4a70A474dfD4AdCD4a302bb40` |
+| USDC (Circle, 6 dec) — l'asset dei vault | `0x5425890298aed601595a70AB815c96711a31Bc65` |
+| aUSDC | `0x9CFcc1B289E59FBe1E769f020C77315DF8473760` |
 
-contract AaveV3Strategy is IStrategy {
-    IPool public immutable POOL; // Aave V3 Pool, Fuji
-    // supply:  transferFrom(vault→this) USDC; forceApprove(POOL); POOL.supply(asset, amount, vault, 0)
-    // withdraw: transferFrom(vault→this) aUSDC; POOL.withdraw(asset, amount, vault)
-    // totalAssets(vault) = aUSDC.balanceOf(vault)  (claim 1:1 sull'underlying)
-}
-```
+Il vault chiama il Pool direttamente: `supply(asset, amount, address(this), 0)` e `withdraw(asset, amount, address(this))`. `Pool.withdraw` brucia gli aToken di `msg.sender`, che è il vault stesso, quindi non serve trasferire aToken a nessuno. L'asset è l'**USDC ufficiale di Circle su Fuji** (faucet.circle.com): nessun token nostro.
 
-Perché così: `Pool.withdraw` brucia gli aToken di `msg.sender`, quindi l'adapter deve poterli ricevere dal vault (gli aToken sono ERC-20 trasferibili). Il vault resta il custode economico; l'adapter non tocca i fondi se non su richiesta del vault ed è sostituibile a livello di factory per i vault futuri (quello di un vault esistente è immutabile). Per i test esiste `MockStrategy` (nessun yield, o yield simulato) e `MockERC20`.
+**Stato reale del mercato (letto on-chain il 2026-09-11):** ~141 USDC depositati in totale, supply APR ≈ **0,13%**, reserve non toccata da giugno 2026. Conseguenza: su importi da demo lo yield maturato in minuti è sotto 1 unità minima (10 USDC × 5 min ≈ 0,0000001 USDC), quindi **il saldo non si muove visibilmente in demo**. La UI mostra il tasso letto da `getReserveData` (currentLiquidityRate) e dichiara che è un tasso di testnet; non si promette un saldo che cresce a vista.
+
+Per i test: `MockPool` (supply/withdraw 1:1 con un `MockERC20` come aToken, yield simulato mintando aToken al vault) e `MockERC20` per l'USDC. L'astrazione `IStrategy` con adapter multipli passa in §16 (estensioni future).
 
 ### 5.6 Sicurezza
 
 - `ReentrancyGuard` su router e `setMode`; `SafeERC20` ovunque; `forceApprove` azzerato prima di ogni approve.
-- Il router accetta solo vault `isVault` (evita vault malevoli che fingono moltiplicatori assurdi).
-- Il vault legge `ASSET` e `strategy` immutabili; l'owner può cambiare solo moltiplicatore, target e modalità.
+- Il router accetta solo vault `isVault` (evita vault malevoli che fingono moltiplicatori assurdi) e, per le spese, solo vault di cui il pagatore è owner.
+- Il vault detiene share solo per il suo owner (`maxDeposit`/`maxMint` = 0 per altri receiver).
+- Il vault ha `asset`, `POOL` e `A_TOKEN` immutabili; l'owner può cambiare solo moltiplicatore, target e modalità.
 - **Trust assumption dichiarata:** il pagatore approva il router (si consiglia `approve` massimo una volta). Il router è codice nostro non upgradabile; il rischio è limitato ai vault della factory. Non custodisce fondi tra una tx e l'altra.
 - Nessun `delegatecall`, nessun upgrade, nessun oracolo (aToken 1:1).
 
@@ -249,14 +253,36 @@ Riferimenti: [registry template](https://docs.ens.domains/ensv2/registry-templat
 1. Registrare `formica.eth` su Sepolia (app.ens.dev; fee in MockUSDC free-mint, ETH da faucet). Se occupato → `formica-savings.eth`.
 2. Deployare lo `UserRegistry` di `formica.eth` via `VerifiableFactory` + `UserRegistryImpl` (proxy UUPS), `initialize(rootAccount = admin Formica, roleBitmap)`.
 3. `ETHRegistry.setSubregistry(labelhash("formica"), registryFormica)` per agganciare il nome alla gerarchia.
+4. Deployare `FormicaRegistrar` (§6.3 bis) e concedergli `ROLE_REGISTRAR` sul registry di `formica.eth`. Da qui l'admin Formica non serve più per i claim.
 
 ### 6.3 Claim namespace (flow utente)
 
 1. L'utente deploya il **proprio** `UserRegistry` via `VerifiableFactory` con `rootAccount = utente` (bitmap: `ROLE_REGISTRAR`/`_ADMIN`, `ROLE_RENEW`/`_ADMIN`, `ROLE_SET_RESOLVER`/`_ADMIN` sul root).
 2. L'utente deploya il proprio `PermissionedResolver` via `VerifiableFactory` (`rootAccount = utente`).
-3. Il nostro admin registra `mario` nel registry di `formica.eth` con `owner = utente`, `subregistry = registry utente`, `resolver = resolver utente`, `roleBitmap` standard (owner può settare resolver, transfer, subregistry), expiry lunga (es. 1 anno; rinnovabile).
+3. L'utente chiama `FormicaRegistrar.claim("mario", registryUtente, resolverUtente)`: il registrar registra `mario` nel registry di `formica.eth` con `owner = msg.sender`, `subregistry = registry utente`, `resolver = resolver utente`, `roleBitmap` standard (owner può settare resolver, transfer, subregistry), expiry lunga (es. 1 anno; rinnovabile).
 
 Da qui l'utente è **root del suo namespace**: noi non possiamo toccare i suoi nomi, lui può revocare tutto.
+
+### 6.3 bis `FormicaRegistrar` (Sepolia)
+
+Senza questo contratto il passo 3 richiederebbe la chiave dell'admin Formica, cioè un backend che l'architettura non ha. Il registrar è il titolare delegato del ruolo di registrazione su `formica.eth`: è l'uso dei **ruoli ENSv2** (delega di un permesso a un contratto) che il bounty ENS valuta come profondità d'integrazione.
+
+```solidity
+contract FormicaRegistrar {
+    IPermissionedRegistry public immutable FORMICA_REGISTRY; // registry di formica.eth
+    uint64 public constant DURATION = 365 days;
+
+    event Claimed(string label, address indexed owner, address subregistry, address resolver);
+
+    function claim(string calldata label, address subregistry, address resolver) external;
+    // first-come-first-served: revert se il label è già registrato e non scaduto;
+    // label validato (lunghezza minima, solo [a-z0-9-]); owner = msg.sender
+}
+```
+
+- **Da verificare in fase 0:** che il registry ENSv2 accetti `ROLE_REGISTRAR` concesso a un contratto e la firma esatta di `register(...)` sul commit `contracts-v2` pinnato.
+- **Test:** fork test Foundry su Sepolia contro il registry reale di `formica.eth` (claim ok, label doppio → revert, label non valido → revert).
+- Nessun owner, nessuna fee, nessun upgrade.
 
 ### 6.4 Creazione goal (flow utente)
 
@@ -283,7 +309,7 @@ I record sono discovery/UX; la fonte di verità dei parametri resta il vault on-
 
 ### 6.7 Fallback dichiarato (trigger: sabato 15:00)
 
-Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati direttamente nel registry di `formica.eth` come `vacanza-mario.formica.eth`, con un resolver condiviso. Resta ENSv2 (registry gerarchico, ruoli, record, multichain addr), si perde un livello di annidamento. La scelta viene documentata nel README e nella submission.
+Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati direttamente nel registry di `formica.eth` come `vacanza-mario.formica.eth` (sempre tramite `FormicaRegistrar`), con un resolver condiviso. Resta ENSv2 (registry gerarchico, ruoli, record, multichain addr), si perde un livello di annidamento. La scelta viene documentata nel README e nella submission.
 
 ---
 
@@ -323,10 +349,11 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 ## 9. Testing e verifica
 
 **Foundry (`contracts/test/`):**
-- `GoalVault.t.sol`: deposit/redeem, share price, yield con `MockStrategy`, cambio modalità, access control, `totalAssets`.
-- `PaymentRouter.t.sol`: matematica round-up/round-down (tabella edge case §5.4), atomicità, revert su vault non registrato, revert su amount 0, allowance insufficiente.
+- `GoalVault.t.sol` (con `MockPool`): deposit/redeem, share price, yield simulato, cambio modalità Liquid↔Yield, access control, `totalAssets`, `maxDeposit`/`maxMint` = 0 per receiver ≠ owner (deposito diretto di terzi → revert).
+- `PaymentRouter.t.sol`: matematica round-up/round-down (tabella edge case §5.4), atomicità, revert su vault non registrato, revert su vault di un altro owner in `payWithRoundUp`, revert su amount 0, allowance insufficiente.
 - `GoalVaultFactory.t.sol`: `goalsOf`, `isVault`, ownership.
-- `AaveV3Strategy.t.sol` con mock del Pool; **test di integrazione reale**: smoke test su Fuji (supply/redeem di importo minimo) eseguito dallo script di deploy, con output salvato.
+- **Fork test Fuji** (`--fork-url $FUJI_RPC_URL`): vault in modalità Yield contro il Pool Aave reale, supply → redeem di importo minimo, USDC tornati. Più smoke test dallo script di deploy, con output salvato.
+- **Fork test Sepolia**: `FormicaRegistrar` (§6.3 bis).
 
 **Frontend:** nessun framework di test per scelta di tempo; checklist E2E manuale ripetuta prima della demo + un video di backup registrato sabato sera.
 
@@ -335,7 +362,7 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 2. Crea goal → 3 tx verdi → nome risolto.
 3. Checkout → saldo merchant + vault corretti, evento su Snowtrace.
 4. Incassa → netto destinatario + saving corretti.
-5. Yield: dopo qualche minuto il saldo vault > somma depositi (con Aave).
+5. Yield: il vault in modalità Yield detiene aUSDC su Snowtrace e la UI mostra il tasso letto live da Aave (~0,13% su testnet). Non si mostra un saldo che cresce: su testnet non cresce a vista (§5.5).
 6. Withdraw → USDC indietro.
 7. Prova ENS: risoluzione live, nessun hardcode.
 
@@ -344,8 +371,8 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 ## 10. Deploy e operazioni
 
 - **Env:** `.env` gitignored con `PRIVATE_KEY` (burner testnet), `FUJI_RPC_URL`, `SEPOLIA_RPC_URL`. Mai stampare o committare la chiave.
-- **Faucet:** AVAX Fuji (Core testnet faucet), Sepolia ETH (faucet pubblico), test USDC Aave Fuji (faucet Aave — **da verificare in fase 0**), MockUSDC ENS (mint libero).
-- **Script:** `Deploy.s.sol` (Fuji: adapter, factory, router; smoke test Aave), script TS per setup ENS (registry, record).
+- **Faucet (per entrambi i wallet demo, da fare venerdì sera):** AVAX Fuji (Core testnet faucet), USDC Fuji (faucet.circle.com — ha un limite per richiesta), Sepolia ETH (faucet pubblico), MockUSDC ENS (mint libero).
+- **Script:** `Deploy.s.sol` (Fuji: factory, router; smoke test Aave), `DeployRegistrar.s.sol` (Sepolia: `FormicaRegistrar` + grant del ruolo), script TS per setup ENS (registry, record).
 - **Indirizzi:** pinnati in `frontend/src/config/addresses.ts` e nel README, con link agli explorer. (Le stringhe precise sono output del deploy, non decisioni di design.)
 - **Verifica contratti:** opzionale su Snowtrace, tentata se avanza tempo.
 - **Commit:** piccoli, uno per step (la history è valutata), con push su `origin/main` dopo ogni step che lascia la build funzionante.
@@ -356,7 +383,7 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 
 | Quando (Europe/Rome) | Milestone | Go/No-Go |
 |---|---|---|
-| Ven 20:30 → 01:00 | **M0**: scaffold, contratti, test verdi, deploy Fuji, smoke Aave, `formica.eth` registrato su Sepolia | Se Aave Fuji non funziona → `MockStrategy` + nota onesta nel README |
+| Ven 20:30 → 01:00 | **M0**: scaffold, contratti, test verdi, deploy Fuji, smoke Aave, `formica.eth` registrato su Sepolia | Se Aave Fuji non funziona → solo modalità Liquid + nota onesta nel README |
 | Sab 09:00 → 13:00 | **M1**: frontend core (dashboard, crea goal, checkout, withdraw) su Fuji | Se il core non gira → congelare feature |
 | Sab 13:00 → 17:00 | **M2**: ENSv2 end-to-end (claim, subname, record, risoluzione) | Se per-user registry non va → fallback flat (§6.7) |
 | Sab 17:00 → 20:00 | **M3**: demo completa provata + video di backup | **20:00 checkpoint**: core demo-able o si taglia tutto il resto |
@@ -370,7 +397,9 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 | Rischio | Prob. | Impatto | Mitigazione |
 |---|---|---|---|
 | ENSv2 beta instabile / API non documentate | Media | Alto (bounty ENS) | Pin del commit `contracts-v2`, lettura docs prima di scrivere, fallback flat, checkpoint sab 15:00 |
-| Contratti Aave Fuji (indirizzi/faucet/cap) diversi da quanto trovato | Media | Medio | Verifica in fase 0 con `cast`; fallback MockStrategy dichiarato |
+| Contratti Aave Fuji (indirizzi/faucet/cap) diversi da quanto trovato | Bassa | Medio | Indirizzi e mercato già verificati on-chain (§5.5); fork test in M0; se il Pool si rompe → modalità Liquid soltanto, dichiarato nel README |
+| Yield invisibile in demo (APR testnet ~0,13%) | Certa | Basso | Mostrare il tasso live e gli aUSDC detenuti, non un saldo che cresce (§5.5) |
+| `ROLE_REGISTRAR` non concedibile a un contratto | Bassa | Alto (claim senza backend) | Verifica fase 0; in extremis claim fatto dall'admin da script, dichiarato |
 | Due chain = UX lenta in demo | Alta | Medio | `switchChain` gestito, tx pre-approvate, namespace pre-claimato per la wallet demo (solo il goal si crea live) |
 | Tempo in solitaria | Alta | Alto | Tagli espliciti §2, checkpoint §11, stretch solo dopo M3 |
 | Matematica arrotondamenti errata | Media | Alto | Unit test esaustivi prima della UI |
@@ -378,7 +407,7 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 | Videomaking in ritardo | Media | Alto | Video di backup registrato sabato sera, rifinito domenica |
 
 **Debolezze note da review:**
-1. Il meccanismo aToken nel `AaveV3Strategy` (transfer di aToken al adapter prima del withdraw) è corretto in teoria ma va provato su Fuji **stasera**: se Aave non consente il pattern, si passa a un adapter che detiene gli aToken per vault (più contabile) o a chiamate dirette al Pool dal vault.
+1. ~~Il meccanismo aToken dell'adapter~~ — risolto in v0.2: il vault chiama il Pool direttamente (§5.5).
 2. La creazione goal richiede 3 firme su 2 chain: accettabile in demo, da valutare se ridurre con un relayer (solo se avanza tempo, mai prima del core).
 3. L'enumerazione dei goal resta centralizzata sulla factory Fuji; non è indicizzata da ENS (limite noto di ENSv2).
 
@@ -386,7 +415,7 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 
 ## 13. Onestà dei claim (regola 15 punti)
 
-**Dichiarato come funzionante:** round-up spese + round-down entrate atomiche; vault ERC-4626 per goal; yield reale Aave V3 Fuji; nomi ENSv2 con registry per-utente, ruoli e record; risoluzione live; withdraw non-custodial.
+**Dichiarato come funzionante:** round-up spese + round-down entrate atomiche; vault ERC-4626 per goal; fondi depositati sul mercato reale Aave V3 Fuji (yield al tasso di testnet, ~0,13% APR); nomi ENSv2 con registry per-utente, registrar delegato via ruoli, record; risoluzione live; withdraw non-custodial.
 
 **Dichiarato come non fatto:** integrazioni bancarie/carte; mainnet; audit; seconda strategia; fee/token; gas sponsorship; step di arrotondamento configurabile; eventuale Swarm se tagliato.
 
@@ -409,19 +438,30 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 
 ## 15. Verifiche da fare in fase 0 (prima di scrivere codice)
 
-1. Indirizzi Aave V3 Fuji (Pool, USDC test, faucet) da `aave-address-book` o docs ufficiali.
+1. ~~Indirizzi Aave V3 Fuji~~ — fatto il 2026-09-11 (§5.5). Resta: prendere USDC da faucet.circle.com e verificare il limite per richiesta.
 2. `formica.eth` disponibile su Sepolia (altrimenti variante).
 3. Versione viem/wagmi con supporto ENSv2 read; commit `contracts-v2` da pinnare.
 4. API `PermissionedResolver` per i write di record (ruoli EAC richiesti).
-5. API `@snaha/swarm-id` (solo se si arriva allo stretch).
-6. Test manuale del pattern aToken (debolezza nota #1).
+5. `ROLE_REGISTRAR` concedibile a un contratto (`FormicaRegistrar`) e firma di `register(...)`.
+6. API `@snaha/swarm-id` (solo se si arriva allo stretch).
 
 ---
 
 ## 16. Estensioni future (non implementate, per il "dove lo porteremmo")
 
-- Secondo adapter (Morpho/Spark dove disponibili) e veri profili di rischio.
+- Astrazione `IStrategy` con adapter multipli (Aave, Morpho/Spark dove disponibili) e veri profili di rischio.
 - Step di arrotondamento configurabile (1/5/10) e arrotondamenti ricorrenti.
 - Smart account con session key e gas sponsorship per l'UX mainstream.
 - Indice dei goal e storico completo su Arkiv/Swarm con query per attributi.
 - Cambio valuta e stablecoin multiple.
+
+---
+
+## 17. Changelog
+
+**v0.2 (2026-09-11, adversarial review)**
+1. **Yield in demo:** verificato on-chain che il mercato USDC Aave Fuji rende ~0,13% APR con ~141 USDC depositati → niente "saldo che cresce" in demo; si mostra il tasso live (§5.5, §9 passo 5, §12).
+2. **`FormicaRegistrar`:** il claim di `mario.formica.eth` non richiede più una chiave admin né un backend; il ruolo di registrazione è delegato a un contratto (§6.2 passo 4, §6.3, §6.3 bis).
+3. **Share solo all'owner:** `maxDeposit`/`maxMint` = 0 per receiver ≠ owner; `payWithRoundUp` accetta solo vault del pagatore (§5.1, §5.3, §5.6).
+4. **Niente adapter:** `AaveV3Strategy`/`IStrategy` rimossi, il vault chiama il Pool direttamente; risolve la debolezza nota #1 (§5.1, §5.5, §16).
+5. **Asset = USDC di Circle su Fuji** (`0x5425…Bc65`, faucet.circle.com), indirizzi Aave verificati (§5.5, §10).
