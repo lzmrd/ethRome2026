@@ -116,6 +116,7 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
     Mode    public mode;
     uint8   public multiplier;        // 1..10
     uint256 public target;            // in USDC (6 dec)
+    uint256 public netDeposited;      // principale netto (depositi - prelievi, floor a 0)
 
     function totalAssets() public view override returns (uint256);
         // asset.balanceOf(this) + A_TOKEN.balanceOf(this)   (aToken 1:1 sull'underlying)
@@ -128,8 +129,11 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
     function setTarget(uint256 t) external onlyOwner;
     function setMode(Mode m) external onlyOwner nonReentrant; // migra i fondi
 
-    function _deposit(...) internal override;  // super; se YIELD: POOL.supply(asset, assets, address(this), 0)
-    function _withdraw(...) internal override; // se l'idle non basta: POOL.withdraw(asset, mancante, address(this)); poi super
+    function _deposit(...) internal override;  // super; netDeposited += assets; se YIELD: POOL.supply(asset, assets, address(this), 0)
+    function _withdraw(...) internal override; // se l'idle non basta: POOL.withdraw(asset, mancante, address(this)); netDeposited -= assets (floor 0); poi super
+
+    function renounceOwnership() public pure override; // revert OwnershipFixed()
+    function transferOwnership(address) public pure override; // revert OwnershipFixed()
 }
 ```
 
@@ -138,6 +142,8 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
 - **Cambio modalità:** migration atomica idle↔Aave, owner-only, `nonReentrant`.
 - **Solo l'owner detiene share:** `maxDeposit`/`maxMint` restituiscono 0 per qualsiasi `receiver` diverso dall'owner, quindi nessuno può depositare nel goal di un altro (né direttamente né via router) e il progresso verso il target conta solo i soldi dell'owner.
 - **Prelievo sempre possibile** finché Aave ha liquidità. I nostri depositi *sono* liquidità del pool (su Fuji la liquidità libera oltre la nostra è ~120 USDC), quindi il redeem dei nostri fondi non resta bloccato salvo che qualcuno li prenda in prestito.
+- **`netDeposited`:** principale netto (depositi meno prelievi, floor a 0), aggiornato in `_deposit`/`_withdraw`. Lo yield maturato è `convertToAssets(balanceOf(owner())) - netDeposited`: un'unica read invece di ricostruire la storia dai log `Deposit`/`Withdraw`.
+- **Ownership fissata alla creazione:** `renounceOwnership()` e `transferOwnership(address)` fanno sempre revert con `OwnershipFixed()`, anche se chiamate dall'owner. Il registro `goalsOf` della factory è indicizzato per creatore: un trasferimento o una rinuncia lo desincronizzerebbero silenziosamente.
 - Access control: owner = utente. Nessun admin esterno, nessuna fee, nessuna pausa.
 
 ### 5.2 `GoalVaultFactory`
@@ -334,6 +340,14 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 - RPC: transport con fallback su endpoint secondario.
 - Rete sbagliata → prompt di switch, blocco azione.
 
+**Regole M1 (dalla final review di M0):**
+- (a) Il saldo del goal si mostra come `convertToAssets(balanceOf(owner))`; lo "yield maturato" è quel valore meno `netDeposited`, clampato a ≥ 0. Non mostrare mai il prezzo share grezzo (`convertToAssets(1 share)`) né derivarne lo yield: dopo un redeem totale la dust del virtual share lo fa saltare a ~2.0 senza che sia maturato yield reale.
+- (b) Prima di `createGoal`: normalizzare la label con `normalize()` (ENS), rifiutare label contenenti `.`, e controllare che non duplichi una label già usata dall'utente (`goalsOf`).
+- (c) Disabilitare il toggle della modalità in cui il vault si trova già (`setMode(currentMode)` è un no-op silenzioso).
+- (d) Mappare i codici di revert di Aave a un messaggio umano: "Liquidità Aave / riserva non disponibile".
+- (e) Leggere gli eventi a partire da `deployBlock` (in `deployments/fuji.json`), a chunk: gli RPC pubblici di Avalanche limitano il range di `eth_getLogs`.
+- (f) Passare sempre `maxPriorityFeePerGas`/`maxFeePerGas` espliciti e minimi (tip minima, come nello script di deploy) per non sprecare AVAX.
+
 ---
 
 ## 8. Swarm — stretch (time-box 3h, solo dopo il checkpoint di sabato 20:00)
@@ -458,6 +472,13 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 ---
 
 ## 17. Changelog
+
+**v0.3 (2026-09-12, final review di M0)**
+1. **`netDeposited`:** contatore di principale netto sul vault (depositi meno prelievi, floor a 0), così lo yield maturato è una singola read invece di ricostruire i log `Deposit`/`Withdraw` (§5.1).
+2. **Ownership fissata:** `renounceOwnership`/`transferOwnership` fanno sempre revert (`OwnershipFixed()`), a protezione del registro `goalsOf` indicizzato per creatore (§5.1).
+3. **Regola prezzo share/yield per M1:** mai mostrare il prezzo share grezzo né derivarne lo yield (salta a ~2.0 dopo un redeem totale per la virtual-share dust di ERC-4626); yield = `convertToAssets(balanceOf(owner)) - netDeposited`, clampato ≥ 0 (§7).
+4. **Altre regole M1 dalla review:** normalizzazione/unicità label prima di `createGoal`, toggle modo disabilitato sul modo corrente, mapping errori Aave, lettura eventi da `deployBlock` a chunk, tip minima esplicita sulle tx (§7).
+5. **Redeploy su Fuji** con le due modifiche additive sopra; `deployments/fuji.json` ora include anche `deployBlock` per il chunking di `eth_getLogs` lato frontend (§10).
 
 **v0.2 (2026-09-11, adversarial review)**
 1. **Yield in demo:** verificato on-chain che il mercato USDC Aave Fuji rende ~0,13% APR con ~141 USDC depositati → niente "saldo che cresce" in demo; si mostra il tasso live (§5.5, §9 passo 5, §12).
