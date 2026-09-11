@@ -717,7 +717,7 @@ git push
 - Consumes: `factoryAbi`, `vaultAbi`, `poolAbi`, indirizzi, `formatUsdc`, `shortAddress`, `useHashRoute` route/navigate.
 - Produces:
   - `useUserGoals(owner?: Address)` → `useReadContract` con `data: readonly Address[] | undefined` (refetch ogni 15s).
-  - `useVaultLabels(vaults: readonly Address[])` → `(string | undefined)[]` (per i picker).
+  - `useVaultLabels(vaults: readonly Address[])` → `{ labels: (string | undefined)[]; isLoading: boolean }` (per i picker e per il gate duplicati).
   - `useGoalMeta(vault?: Address)` → `{ isLoading, owner?, label?, mode?, multiplier?, target?, netDeposited? }`.
   - `useGoalBalance(vault?: Address, owner?: Address)` → `{ isLoading, balance?, shares?, refetch() }` dove `balance = maxWithdraw(owner)` (regola a).
   - `useAaveApy()` → `number | undefined` (percentuale già moltiplicata, es. `0.13`).
@@ -1347,7 +1347,7 @@ export function Spend() {
 
   const goals = useUserGoals(owner)
   const vaults = goals.data ?? []
-  const labels = useVaultLabels(vaults)
+  const { labels } = useVaultLabels(vaults)
 
   const [selected, setSelected] = useState<Address>()
   const [amountInput, setAmountInput] = useState('')
