@@ -1,3 +1,9 @@
 [submodule "docs/hacker-manual"]
 	path = docs/hacker-manual
 	url = https://github.com/urbeETH/ethrome-2026-hacker-manual.git
+[submodule "contracts/lib/forge-std"]
+	path = contracts/lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "contracts/lib/openzeppelin-contracts"]
+	path = contracts/lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts

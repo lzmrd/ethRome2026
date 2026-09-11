@@ -24,3 +24,6 @@ hacker_manual.md
 # OS / editors
 .DS_Store
 *.log
+
+# Foundry local-chain broadcasts
+contracts/broadcast/*/31337/
