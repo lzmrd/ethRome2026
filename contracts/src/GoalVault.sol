@@ -30,12 +30,17 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
     uint8 public multiplier;
     uint256 public target;
 
+    /// @notice Net principal (deposits minus withdrawals, floored at 0).
+    ///         Accrued yield = convertToAssets(balanceOf(owner())) - netDeposited.
+    uint256 public netDeposited;
+
     event ModeChanged(Mode mode);
     event MultiplierChanged(uint8 multiplier);
     event TargetChanged(uint256 target);
 
     error InvalidMultiplier(uint8 multiplier);
     error EmptyLabel();
+    error OwnershipFixed();
 
     constructor(
         IERC20 asset_,
@@ -70,6 +75,16 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
         return receiver == owner() ? super.maxMint(receiver) : 0;
     }
 
+    /// @notice Ownership is fixed at creation: the factory's per-owner registry (`goalsOf`) is
+    ///         keyed by the creator and would silently desync from a transferred or renounced vault.
+    function renounceOwnership() public pure override {
+        revert OwnershipFixed();
+    }
+
+    function transferOwnership(address) public pure override {
+        revert OwnershipFixed();
+    }
+
     function setMultiplier(uint8 m) external onlyOwner {
         _checkMultiplier(m);
         multiplier = m;
@@ -96,6 +111,7 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
 
     function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override nonReentrant {
         super._deposit(caller, receiver, assets, shares);
+        netDeposited += assets;
         if (mode == Mode.YIELD && assets > 0) _supply(assets);
     }
 
@@ -110,6 +126,7 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
             uint256 aBalance = A_TOKEN.balanceOf(address(this));
             POOL.withdraw(asset(), need >= aBalance ? type(uint256).max : need, address(this));
         }
+        netDeposited = assets >= netDeposited ? 0 : netDeposited - assets;
         super._withdraw(caller, receiver, owner_, assets, shares);
     }
 

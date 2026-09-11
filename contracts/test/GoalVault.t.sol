@@ -203,4 +203,52 @@ contract GoalVaultTest is Test {
         vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, bob));
         v.setTarget(1);
     }
+
+    // --- netDeposited ---
+
+    function test_netDeposited_tracksDeposit_liquid() public {
+        GoalVault v = _vault(GoalVault.Mode.LIQUID);
+        _deposit(v, 100e6);
+        assertEq(v.netDeposited(), 100e6);
+    }
+
+    function test_netDeposited_tracksDeposit_yield() public {
+        GoalVault v = _vault(GoalVault.Mode.YIELD);
+        _deposit(v, 100e6);
+        assertEq(v.netDeposited(), 100e6);
+    }
+
+    function test_netDeposited_tracksPartialWithdraw() public {
+        GoalVault v = _vault(GoalVault.Mode.LIQUID);
+        _deposit(v, 100e6);
+        vm.prank(alice);
+        v.withdraw(40e6, alice, alice);
+        assertEq(v.netDeposited(), 60e6);
+    }
+
+    function test_netDeposited_flooredAtZero_afterAccrueAndFullRedeem() public {
+        GoalVault v = _vault(GoalVault.Mode.YIELD);
+        _deposit(v, 100e6);
+        pool.accrue(address(v), 10e6); // redeem pulls out more than netDeposited
+        uint256 shares = v.balanceOf(alice);
+        vm.prank(alice);
+        v.redeem(shares, alice, alice);
+        assertEq(v.netDeposited(), 0);
+    }
+
+    // --- fixed ownership ---
+
+    function test_renounceOwnership_alwaysReverts() public {
+        GoalVault v = _vault(GoalVault.Mode.LIQUID);
+        vm.prank(alice); // even the owner
+        vm.expectRevert(GoalVault.OwnershipFixed.selector);
+        v.renounceOwnership();
+    }
+
+    function test_transferOwnership_alwaysReverts() public {
+        GoalVault v = _vault(GoalVault.Mode.LIQUID);
+        vm.prank(alice); // even the owner
+        vm.expectRevert(GoalVault.OwnershipFixed.selector);
+        v.transferOwnership(bob);
+    }
 }

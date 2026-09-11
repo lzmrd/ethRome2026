@@ -71,6 +71,7 @@ contract PaymentRouterTest is Test {
         assertEq(vault.totalAssets(), 2.1e6);
         assertEq(vault.maxWithdraw(alice), 2.1e6);
         assertEq(usdc.balanceOf(address(router)), 0);
+        assertEq(vault.netDeposited(), 2.1e6);
     }
 
     function test_payWithRoundUp_roundAmount_noSaving() public {
@@ -132,6 +133,8 @@ contract PaymentRouterTest is Test {
         assertEq(usdc.balanceOf(bob), 1_000e6 - 104.3e6);
         assertEq(vault.maxWithdraw(alice), 0.9e6);
         assertEq(vault.balanceOf(bob), 0);
+        assertEq(vault.netDeposited(), 0.9e6);
+        assertEq(usdc.balanceOf(address(router)), 0);
     }
 
     function test_receiveWithRoundDown_cappedAtIntegerPart() public {
