@@ -1,0 +1,33 @@
+No files changed, compilation skipped
+Script ran successfully.
+
+== Logs ==
+  vault: 0x31857E8e550Da922DD4F48F97Aa7DEDb1f5396cE
+  saving (USDC units): 700000
+  vault aUSDC: 700000
+  redeemed (USDC units): 700000
+  saver USDC start/end: 21000000 21000000
+
+## Setting up 1 EVM.
+
+==========================
+
+Chain 43113
+
+Estimated gas price: 0.5000001 gwei
+
+Estimated total gas used for script: 3395575
+
+Estimated amount required: 0.0016977878395575 ETH
+
+==========================
+
+
+==========================
+
+ONCHAIN EXECUTION COMPLETE & SUCCESSFUL.
+
+Transactions saved to: /home/revsurfer/projects/hacks/ethRome2026/contracts/broadcast/Smoke.s.sol/43113/run-latest.json
+
+Sensitive values saved to: /home/revsurfer/projects/hacks/ethRome2026/contracts/cache/Smoke.s.sol/43113/run-latest.json
+
