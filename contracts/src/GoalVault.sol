@@ -94,7 +94,7 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
         emit ModeChanged(m);
     }
 
-    function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override {
+    function _deposit(address caller, address receiver, uint256 assets, uint256 shares) internal override nonReentrant {
         super._deposit(caller, receiver, assets, shares);
         if (mode == Mode.YIELD && assets > 0) _supply(assets);
     }
@@ -102,6 +102,7 @@ contract GoalVault is ERC4626, Ownable, ReentrancyGuard {
     function _withdraw(address caller, address receiver, address owner_, uint256 assets, uint256 shares)
         internal
         override
+        nonReentrant
     {
         uint256 idle = IERC20(asset()).balanceOf(address(this));
         if (idle < assets) {
