@@ -66,6 +66,21 @@ contract FujiForkTest is Test {
         assertLe(vault.totalAssets(), 2); // ERC-4626 virtual-share + Aave rounding dust
     }
 
+    function test_fork_partialWithdraw_leavesRestInAave() public onlyFork {
+        vm.prank(alice);
+        GoalVault vault = GoalVault(factory.createGoal("moto", GoalVault.Mode.YIELD, 1, 0));
+        vm.startPrank(alice);
+        USDC.approve(address(vault), 1e6);
+        vault.deposit(1e6, alice);
+        uint256 usdcBefore = USDC.balanceOf(alice);
+        vault.withdraw(0.3e6, alice, alice);
+        vm.stopPrank();
+
+        assertApproxEqAbs(AUSDC.balanceOf(address(vault)), 0.7e6, 2);
+        assertEq(USDC.balanceOf(alice), usdcBefore + 0.3e6);
+        assertEq(vault.netDeposited(), 0.7e6);
+    }
+
     function test_fork_setModeMigratesThroughAave() public onlyFork {
         vm.prank(alice);
         GoalVault vault = GoalVault(factory.createGoal("bici", GoalVault.Mode.LIQUID, 1, 0));
