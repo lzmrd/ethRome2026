@@ -348,7 +348,7 @@ Se il `UserRegistry` per-utente non è stabile, i goal vengono registrati dirett
 - **Script:** `Deploy.s.sol` (Fuji: adapter, factory, router; smoke test Aave), script TS per setup ENS (registry, record).
 - **Indirizzi:** pinnati in `frontend/src/config/addresses.ts` e nel README, con link agli explorer. (Le stringhe precise sono output del deploy, non decisioni di design.)
 - **Verifica contratti:** opzionale su Snowtrace, tentata se avanza tempo.
-- **Commit:** piccoli, uno per step (la history è valutata). Push solo quando richiesto.
+- **Commit:** piccoli, uno per step (la history è valutata), con push su `origin/main` dopo ogni step che lascia la build funzionante.
 
 ---
 

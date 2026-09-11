@@ -1,14 +1,16 @@
-# ETHRome 2026 — project TBD
+# Formica — ETHRome 2026
 
-Our build for ETHRome 2026 (Urbe Hub, Rome, 40-hour hackathon). The idea, bounties and stack are still open: fill in **Project** below once brainstorming settles them.
+Our build for ETHRome 2026 (Urbe Hub, Rome, 40-hour hackathon). Solo team.
 
 ## Project
 
-- **Idea (one line):** TBD
-- **Bounties:** TBD — Arkiv (missions 01/02/03) · Swarm · Team1 (Track A *or* B, one only) · ENSv2
-- **Stack:** TBD
-- **Chains:** TBD — ENSv2 beta runs on Sepolia, Team1 requires Avalanche Fuji, Swarm via public gateway + Swarm ID
-- **Commands:** TBD (dev, test, deploy)
+- **Idea (one line):** Round up your spending (and down your income) into named savings goals. Each goal is an ERC-4626 vault with an ENSv2 subname; funds earn yield on Aave and stay non-custodial.
+- **Design spec (source of truth):** `docs/superpowers/specs/2026-09-11-formica-design.md` — scope, cuts, checkpoints and fallbacks live there. Read it before starting any milestone.
+- **Bounties:** Team1 Track A (core) · ENSv2 · Swarm (stretch, only after the Sat 20:00 checkpoint) · Arkiv excluded
+- **Stack:** Solidity ^0.8.24 + Foundry + OpenZeppelin (`contracts/`) · Vite + React + TS + wagmi + viem + Tailwind (`frontend/`)
+- **Chains:** money on Avalanche Fuji (43113) · names on Sepolia (ENSv2 beta) · Swarm via Swarm ID (stretch)
+- **Commands:** TBD once scaffolded (dev, test, deploy)
+- **Foundry:** `/usr/bin/forge` on this machine is NOT Foundry — use `~/.foundry/bin/forge` until PATH is fixed
 
 ## Deadlines (Europe/Rome — get the current time with `date`, never assume it)
 
@@ -42,4 +44,4 @@ Code 50% (live demo 5 · stated functionality fully implemented 15 · difficulty
 ## Working rules
 
 - Secrets: testnet burner keys only, in `.env` (gitignored). Never commit, print or paste a private key.
-- Commits: small and frequent, one per working step — the history is what judges check. Push only when the user asks.
+- Commits: small and frequent, one per working step — the history is what judges check. Push to `origin/main` after each commit (or batch of commits) that leaves the build working.
