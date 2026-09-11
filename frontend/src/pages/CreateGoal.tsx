@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { decodeEventLog, isAddress, type Address } from 'viem'
 import { normalize } from 'viem/ens'
 import { useConnection } from 'wagmi'
+import { useQueryClient } from '@tanstack/react-query'
 import { factoryAbi } from '../config/abis'
 import { FACTORY } from '../config/addresses'
 import { TxStatus } from '../components/TxStatus'
@@ -22,6 +23,7 @@ function normalizeLabel(input: string): string | undefined {
 export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
   const connection = useConnection()
   const owner = connection.address
+  const queryClient = useQueryClient()
 
   const [labelInput, setLabelInput] = useState('')
   const [mode, setMode] = useState(0)
@@ -59,6 +61,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
         })
         const vault = decoded.args.vault as Address
         if (isAddress(vault)) {
+          void queryClient.invalidateQueries()
           navigate(`/goal/${vault}`)
           return
         }
@@ -66,7 +69,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
         // log di un altro contratto nella stessa ricevuta
       }
     }
-  }, [phase, receipt.data, navigate])
+  }, [phase, receipt.data, navigate, queryClient])
 
   async function onSubmit() {
     if (!owner || !label || target === undefined) return

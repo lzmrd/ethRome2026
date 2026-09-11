@@ -26,7 +26,9 @@ export function Spend() {
   )
 
   useEffect(() => {
-    if (!selected && vaults.length > 0) setSelected(vaults[0])
+    if (vaults.length > 0 && (!selected || !vaults.includes(selected))) {
+      setSelected(vaults[vaults.length - 1])
+    }
   }, [selected, vaults])
 
   const meta = useGoalMeta(selected)
