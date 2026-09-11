@@ -18,7 +18,10 @@ export function useVaultLabels(vaults: readonly Address[]) {
     contracts: vaults.map((vault) => ({ address: vault, abi: vaultAbi, functionName: 'label' }) as const),
     query: { enabled: vaults.length > 0 },
   })
-  return (query.data ?? []).map((result) => (result.status === 'success' ? result.result : undefined))
+  return {
+    labels: (query.data ?? []).map((result) => (result.status === 'success' ? result.result : undefined)),
+    isLoading: query.isLoading,
+  }
 }
 
 export function useGoalMeta(vault?: Address) {

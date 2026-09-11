@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Hex, SimulateContractParameters } from 'viem'
+import type { Account, Address, Hex, SimulateContractParameters } from 'viem'
 import { usePublicClient, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { humanizeTxError } from './errors'
 
@@ -30,9 +30,12 @@ export function useTx() {
     }
   }, [receipt.error, phase])
 
-  async function run(params: SimulateContractParameters): Promise<Hex | undefined> {
+  async function run(
+    params: Omit<SimulateContractParameters, 'account'> & { account?: Account | Address }
+  ): Promise<Hex | undefined> {
     if (!publicClient) return undefined
     setError(undefined)
+    setHash(undefined)
     setPhase('simulating')
     try {
       const simulateParams = { ...params, ...FEE_OVERRIDES } as Parameters<

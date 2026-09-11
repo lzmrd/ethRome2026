@@ -29,7 +29,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
   const [targetInput, setTargetInput] = useState('20')
 
   const goals = useUserGoals(owner)
-  const existingLabels = useVaultLabels(goals.data ?? [])
+  const { labels: existingLabels, isLoading: labelsLoading } = useVaultLabels(goals.data ?? [])
 
   const { phase, hash, error, run, receipt } = useTx()
 
@@ -39,6 +39,8 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
   const multiplierValid = Number.isInteger(multiplier) && multiplier >= 1 && multiplier <= 10
   const canSubmit =
     Boolean(owner) &&
+    !goals.isLoading &&
+    !labelsLoading &&
     label !== undefined &&
     !duplicate &&
     multiplierValid &&
@@ -74,7 +76,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
       abi: factoryAbi,
       functionName: 'createGoal',
       args: [label, mode, multiplier, target],
-    } as unknown as Parameters<typeof run>[0])
+    })
   }
 
   return (
