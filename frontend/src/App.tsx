@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { useHashRoute } from './lib/hashRoute'
 import { CreateGoal } from './pages/CreateGoal'
 import { Dashboard } from './pages/Dashboard'
+import { Spend } from './pages/Spend'
 
 export function App() {
   const { route, navigate } = useHashRoute()
@@ -14,6 +15,7 @@ export function App() {
         <ChainGuard>
           {route.name === 'dashboard' && <Dashboard navigate={navigate} />}
           {route.name === 'create' && <CreateGoal navigate={navigate} />}
+          {route.name === 'spend' && <Spend />}
           {route.name === 'goal' && (
             <p className="text-sm text-neutral-400">
               Dettaglio goal in arrivo (vault {route.address}).
