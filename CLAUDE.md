@@ -9,7 +9,8 @@ Our build for ETHRome 2026 (Urbe Hub, Rome, 40-hour hackathon). Solo team.
 - **Bounties:** Team1 Track A (core) · ENSv2 · Swarm (stretch, only after the Sat 20:00 checkpoint) · Arkiv excluded
 - **Stack:** Solidity ^0.8.24 + Foundry + OpenZeppelin (`contracts/`) · Vite + React + TS + wagmi + viem + Tailwind (`frontend/`)
 - **Chains:** money on Avalanche Fuji (43113) · names on Sepolia (ENSv2 beta) · Swarm via Swarm ID (stretch)
-- **Commands:** TBD once scaffolded (dev, test, deploy)
+- **Commands (contracts):** `cd contracts && ~/.foundry/bin/forge test` · deploy/scripts: `~/.foundry/bin/forge script <script> --rpc-url fuji --broadcast --priority-gas-price 1 --with-gas-price 1000` (frontend: TBD once scaffolded)
+- **Gas on Fuji:** base fee is ~10 wei; forge's default tip (0.5–1 gwei) burns ~10⁷× more AVAX than needed. Always pass a tiny tip (`--priority-gas-price 1` in forge/cast; explicit `maxPriorityFeePerGas`/`maxFeePerGas` in viem). A transfer with tip 1 wei mined at 11 wei/gas.
 - **Foundry:** `/usr/bin/forge` on this machine is NOT Foundry — use `~/.foundry/bin/forge` until PATH is fixed
 
 ## Deadlines (Europe/Rome — get the current time with `date`, never assume it)
