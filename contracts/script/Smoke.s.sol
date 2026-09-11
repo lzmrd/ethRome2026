@@ -32,6 +32,7 @@ contract Smoke is Script {
         console.log("vault:", address(vault));
         console.log("saving (USDC units):", saving);
         console.log("vault aUSDC:", aBalance);
+        console.log("netDeposited before redeem:", vault.netDeposited());
         require(saving == 0.7e6, "unexpected saving");
         require(aBalance + 1 >= 0.7e6, "vault did not supply to Aave");
 
@@ -41,6 +42,7 @@ contract Smoke is Script {
 
         console.log("redeemed (USDC units):", out);
         console.log("saver USDC start/end:", usdcStart, usdc.balanceOf(saver));
+        console.log("netDeposited after redeem:", vault.netDeposited());
         require(aUsdc.balanceOf(address(vault)) <= 2, "aUSDC left in vault"); // rounding dust only
     }
 }

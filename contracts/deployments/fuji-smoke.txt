@@ -2,11 +2,13 @@ No files changed, compilation skipped
 Script ran successfully.
 
 == Logs ==
-  vault: 0x31857E8e550Da922DD4F48F97Aa7DEDb1f5396cE
+  vault: 0x4F24F3d4217816fec7339e8B0Db09b735BcD2c8A
   saving (USDC units): 700000
-  vault aUSDC: 700000
+  vault aUSDC: 700001
+  netDeposited before redeem: 700000
   redeemed (USDC units): 700000
   saver USDC start/end: 21000000 21000000
+  netDeposited after redeem: 0
 
 ## Setting up 1 EVM.
 
@@ -14,11 +16,11 @@ Script ran successfully.
 
 Chain 43113
 
-Estimated gas price: 0.5000001 gwei
+Estimated gas price: 0.000001 gwei
 
-Estimated total gas used for script: 3395575
+Estimated total gas used for script: 3334346
 
-Estimated amount required: 0.0016977878395575 ETH
+Estimated amount required: 0.000000003334346 ETH
 
 ==========================
 

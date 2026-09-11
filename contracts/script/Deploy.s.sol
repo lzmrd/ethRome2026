@@ -23,7 +23,8 @@ contract Deploy is Script {
         vm.serializeAddress(key, "pool", FujiAddresses.POOL);
         vm.serializeAddress(key, "aUsdc", FujiAddresses.AUSDC);
         vm.serializeAddress(key, "factory", address(factory));
-        string memory json = vm.serializeAddress(key, "router", address(router));
+        vm.serializeAddress(key, "router", address(router));
+        string memory json = vm.serializeUint(key, "deployBlock", block.number);
         vm.writeJson(json, "./deployments/fuji.json");
 
         console.log("GoalVaultFactory:", address(factory));
