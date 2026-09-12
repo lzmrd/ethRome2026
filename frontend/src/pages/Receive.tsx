@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { erc20Abi, routerAbi } from '../config/abis'
 import { ROUTER, USDC } from '../config/addresses'
 import { TxStatus } from '../components/TxStatus'
+import { AmountInput, Button, Card, Field, Row, Spinner, TextInput } from '../components/ui'
 import { useGoalTarget } from '../hooks/useEnsGoal'
 import { useGoalMeta } from '../hooks/useGoals'
 import { useRoundDownQuote, useRouterAllowance, useUsdcBalance } from '../hooks/useUsdc'
@@ -82,91 +83,88 @@ export function Receive() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Receive</h1>
-      <p className="mt-1 text-sm text-neutral-400">
-        Pay in income: the recipient gets the net amount, the rounded difference goes into their goal.
-      </p>
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Receive</h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          Pay in income: the recipient gets the net amount, the rounded difference goes into their goal.
+        </p>
+      </header>
 
-      <div className="mt-6 space-y-4">
-        <label className="block">
-          <span className="text-sm text-neutral-300">ENS name or goal address</span>
-          <input
+      <Card className="space-y-5">
+        <Field label="ENS name or goal address" error={target.error}>
+          <TextInput
             value={vaultInput}
             onChange={(event) => setVaultInput(event.target.value)}
             placeholder="vacanza.mario.formica.eth"
-            className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 font-mono text-xs outline-none focus:border-amber-500"
+            className="font-mono text-xs"
           />
-          {target.error && <span className="mt-1 block text-xs text-red-400">{target.error}</span>}
-          {target.kind === 'name' && target.vault && (
-            <span className="mt-1 block text-xs text-neutral-500">
-              {target.name} → {shortAddress(target.vault)}
-            </span>
-          )}
-          {meta.label !== undefined && meta.owner !== undefined && (
-            <span className="mt-1 block text-xs text-neutral-500">
-              goal "{meta.label}" by {shortAddress(meta.owner)} · x{meta.multiplier}
-            </span>
-          )}
-        </label>
+          <div className="mt-1.5 min-h-4 text-xs text-ink-mute">
+            {target.isLoading && (
+              <span className="inline-flex items-center gap-1.5">
+                <Spinner className="size-3" /> resolving…
+              </span>
+            )}
+            {target.kind === 'name' && target.vault && !target.isLoading && (
+              <span className="tnum text-good">
+                {target.name} → {shortAddress(target.vault)}
+              </span>
+            )}
+            {meta.label !== undefined && meta.owner !== undefined && (
+              <span className="ml-2">
+                goal "{meta.label}" by {shortAddress(meta.owner)} · x{meta.multiplier}
+              </span>
+            )}
+          </div>
+        </Field>
 
-        <label className="block">
-          <span className="text-sm text-neutral-300">Gross amount (USDC)</span>
-          <input
+        <Field label="Gross amount (USDC)">
+          <AmountInput
             value={amountInput}
             onChange={(event) => setAmountInput(event.target.value)}
             placeholder="104.30"
-            inputMode="decimal"
-            className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:border-amber-500"
           />
-        </label>
+        </Field>
 
-        <div className="rounded-lg bg-neutral-900 p-3 text-sm">
+        <div className="rounded-xl border border-line bg-canvas/40 px-4 py-3">
           {amount === undefined || saving === undefined || net === undefined ? (
-            <p className="text-neutral-500">Enter an amount to see the preview.</p>
+            <p className="py-1.5 text-sm text-ink-mute">Enter an amount to see the preview.</p>
           ) : (
-            <ul className="space-y-1 text-neutral-300">
-              <li className="flex justify-between">
-                <span>Recipient</span>
-                <span>{formatUsdc(net)} USDC</span>
-              </li>
-              <li className="flex justify-between">
-                <span>Saved into the goal</span>
-                <span className="text-amber-400">+{formatUsdc(saving)} USDC</span>
-              </li>
-              <li className="flex justify-between border-t border-neutral-800 pt-1 font-medium">
-                <span>Total charge</span>
-                <span>{formatUsdc(amount)} USDC</span>
-              </li>
-            </ul>
+            <>
+              <Row label="Recipient" value={`${formatUsdc(net)} USDC`} />
+              <Row label="Saved into the goal" value={`+${formatUsdc(saving)} USDC`} tone="brand" />
+              <Row label="Total charge" value={`${formatUsdc(amount)} USDC`} strong />
+            </>
           )}
         </div>
 
-        <p className="text-xs text-neutral-500">
-          Your balance (payer): {balance.data === undefined ? '…' : `${formatUsdc(balance.data)} USDC`}
-        </p>
-
-        {insufficient === true && <p className="text-xs text-red-400">Not enough USDC balance.</p>}
+        <div className="flex items-center justify-between text-xs text-ink-mute">
+          <span className="tnum">
+            Your balance (payer): {balance.data === undefined ? '…' : `${formatUsdc(balance.data)} USDC`}
+          </span>
+          {insufficient === true && <span className="text-bad">Not enough USDC balance.</span>}
+        </div>
 
         {needsApproval === true && (
-          <button
-            onClick={onApprove}
-            disabled={!canApprove}
-            className="w-full rounded-lg border border-amber-500 px-4 py-2 font-medium text-amber-400 disabled:opacity-40"
-          >
-            Approve USDC for the router
-          </button>
+          <div>
+            <Button variant="secondary" full onClick={onApprove} disabled={!canApprove}>
+              Approve USDC for the router
+            </Button>
+            <TxStatus phase={approval.phase} hash={approval.hash} error={approval.error} />
+          </div>
         )}
-        <TxStatus phase={approval.phase} hash={approval.hash} error={approval.error} />
 
-        <button
-          onClick={onSend}
-          disabled={!canSend}
-          className="w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
-        >
-          Send income
-        </button>
-        <TxStatus phase={income.phase} hash={income.hash} error={income.error} />
-      </div>
+        <div>
+          <Button
+            full
+            onClick={onSend}
+            disabled={!canSend}
+            busy={['simulating', 'signing', 'mining'].includes(income.phase)}
+          >
+            Send income
+          </Button>
+          <TxStatus phase={income.phase} hash={income.hash} error={income.error} />
+        </div>
+      </Card>
     </div>
   )
 }

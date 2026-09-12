@@ -2,6 +2,7 @@ import { useConnection, useWatchContractEvent } from 'wagmi'
 import { factoryAbi } from '../config/abis'
 import { FACTORY } from '../config/addresses'
 import { GoalCard } from '../components/GoalCard'
+import { Badge, Button, EmptyState, Skeleton } from '../components/ui'
 import { useAaveApy } from '../hooks/useAaveApy'
 import { useUserGoals } from '../hooks/useGoals'
 
@@ -24,31 +25,35 @@ export function Dashboard({ navigate }: { navigate: (path: string) => void }) {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-bold">Your goals</h1>
-          <p className="text-sm text-neutral-400">
-            {apy === undefined
-              ? 'Aave V3: reading rate…'
-              : `Aave V3 supply APY: ${apy.toFixed(2)}% (testnet, live)`}
-          </p>
+          <h1 className="text-2xl font-bold tracking-tight">Your goals</h1>
+          <div className="mt-2">
+            {apy === undefined ? (
+              <Skeleton className="h-5 w-44" />
+            ) : (
+              <Badge tone="good">Aave V3 supply APY {apy.toFixed(2)}% · live on testnet</Badge>
+            )}
+          </div>
         </div>
-        <button
-          onClick={() => navigate('/create')}
-          className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-neutral-950"
-        >
-          New goal
-        </button>
-      </div>
+        <Button onClick={() => navigate('/create')}>New goal</Button>
+      </header>
 
-      {goals.isLoading && <p className="mt-8 text-sm text-neutral-400">Loading goals…</p>}
+      {goals.isLoading && (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <Skeleton className="h-44 w-full rounded-2xl" />
+          <Skeleton className="h-44 w-full rounded-2xl" />
+        </div>
+      )}
 
       {!goals.isLoading && vaults.length === 0 && (
-        <div className="mt-8 rounded-xl border border-dashed border-neutral-700 p-8 text-center">
-          <p className="text-neutral-300">No goals yet.</p>
-          <p className="mt-1 text-sm text-neutral-500">
-            Create your first one: each goal is a separate ERC-4626 vault.
-          </p>
+        <div className="mt-8">
+          <EmptyState
+            title="No goals yet."
+            action={<Button onClick={() => navigate('/create')}>Create your first goal</Button>}
+          >
+            Each goal is a separate ERC-4626 vault that you own, with its own round-up multiplier.
+          </EmptyState>
         </div>
       )}
 

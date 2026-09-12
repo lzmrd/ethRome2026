@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { factoryAbi } from '../config/abis'
 import { FACTORY } from '../config/addresses'
 import { TxStatus } from '../components/TxStatus'
+import { Button, Card, Field, TextInput, cx } from '../components/ui'
 import { useUserGoals, useVaultLabels } from '../hooks/useGoals'
 import { formatUsdc, parseUsdc } from '../lib/format'
 import { useTx } from '../lib/tx'
@@ -84,97 +85,100 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Create a goal</h1>
-      <p className="mt-1 text-sm text-neutral-400">
-        Each goal is a separate ERC-4626 vault. The name becomes its ENS subname.
-      </p>
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold tracking-tight">Create a goal</h1>
+        <p className="mt-1 text-sm text-ink-soft">
+          Each goal is a separate ERC-4626 vault. The name becomes its ENS subname.
+        </p>
+      </header>
 
-      <div className="mt-6 space-y-4">
-        <label className="block">
-          <span className="text-sm text-neutral-300">Name</span>
-          <input
+      <Card className="space-y-5">
+        <Field
+          label="Name"
+          error={
+            labelInput.trim() !== '' && label === undefined
+              ? 'Invalid name: lowercase letters, numbers and hyphens; no dots.'
+              : duplicate
+                ? 'You already have a goal with this name.'
+                : undefined
+          }
+          hint={label !== undefined && !duplicate ? `normalized name: ${label}` : undefined}
+        >
+          <TextInput
             value={labelInput}
             onChange={(event) => setLabelInput(event.target.value)}
             placeholder="vacanza"
-            className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:border-amber-500"
           />
-          {labelInput.trim() !== '' && label === undefined && (
-            <span className="mt-1 block text-xs text-red-400">
-              Invalid name: lowercase letters, numbers and hyphens; no dots.
-            </span>
-          )}
-          {duplicate && <span className="mt-1 block text-xs text-red-400">You already have a goal with this name.</span>}
-          {label !== undefined && !duplicate && (
-            <span className="mt-1 block text-xs text-neutral-500">normalized name: {label}</span>
-          )}
-        </label>
+        </Field>
 
         <fieldset>
-          <legend className="text-sm text-neutral-300">Mode</legend>
-          <div className="mt-1 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setMode(0)}
-              className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
-                mode === 0 ? 'border-amber-500 bg-amber-500/10' : 'border-neutral-700'
-              }`}
-            >
-              Liquid (no risk)
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode(1)}
-              className={`flex-1 rounded-lg border px-3 py-2 text-sm ${
-                mode === 1 ? 'border-amber-500 bg-amber-500/10' : 'border-neutral-700'
-              }`}
-            >
-              Yield (Aave V3)
-            </button>
+          <legend className="text-xs font-medium tracking-wide text-ink-soft uppercase">Mode</legend>
+          <div className="mt-1.5 grid grid-cols-2 gap-2">
+            {[
+              { value: 0 as const, title: 'Liquid', sub: 'no risk' },
+              { value: 1 as const, title: 'Yield', sub: 'Aave V3' },
+            ].map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => setMode(option.value)}
+                aria-pressed={mode === option.value}
+                className={cx(
+                  'rounded-xl border px-3 py-2.5 text-left transition duration-150 ease-soft',
+                  mode === option.value
+                    ? 'border-brand bg-brand/10 text-ink'
+                    : 'border-line text-ink-soft hover:border-line-strong hover:bg-raised',
+                )}
+              >
+                <span className="block text-sm font-medium">{option.title}</span>
+                <span className="block text-xs text-ink-mute">{option.sub}</span>
+              </button>
+            ))}
           </div>
         </fieldset>
 
-        <div className="flex gap-4">
-          <label className="block flex-1">
-            <span className="text-sm text-neutral-300">Multiplier (1-10)</span>
-            <input
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field label="Multiplier (1-10)" error={!multiplierValid ? 'From 1 to 10.' : undefined}>
+            <TextInput
               type="number"
               min={1}
               max={10}
               value={multiplier}
               onChange={(event) => setMultiplier(Number(event.target.value))}
-              className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:border-amber-500"
+              className="tnum"
             />
-            {!multiplierValid && <span className="mt-1 block text-xs text-red-400">From 1 to 10.</span>}
-          </label>
-          <label className="block flex-1">
-            <span className="text-sm text-neutral-300">Target in USDC (optional)</span>
-            <input
+          </Field>
+          <Field
+            label="Target in USDC (optional)"
+            error={targetInput.trim() !== '' && target === undefined ? 'Invalid amount.' : undefined}
+          >
+            <TextInput
               value={targetInput}
               onChange={(event) => setTargetInput(event.target.value)}
               inputMode="decimal"
-              className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:border-amber-500"
+              className="tnum"
             />
-            {targetInput.trim() !== '' && target === undefined && (
-              <span className="mt-1 block text-xs text-red-400">Invalid amount.</span>
-            )}
-          </label>
+          </Field>
         </div>
 
-        <div className="rounded-lg bg-neutral-900 p-3 text-xs text-neutral-400">
-          Preview: {label ?? '…'} · {mode === 1 ? 'Yield on Aave' : 'Liquid'} · x{multiplier} · target{' '}
-          {target === undefined ? '…' : `${formatUsdc(target)} USDC`}
+        <p className="rounded-xl border border-line bg-canvas/40 px-4 py-3 text-xs text-ink-soft">
+          Preview: <span className="text-ink">{label ?? '…'}</span> ·{' '}
+          {mode === 1 ? 'Yield on Aave' : 'Liquid'} · x{multiplier} · target{' '}
+          <span className="tnum">{target === undefined ? '…' : `${formatUsdc(target)} USDC`}</span>
+        </p>
+
+        <div>
+          <Button
+            full
+            onClick={onSubmit}
+            disabled={!canSubmit}
+            busy={['simulating', 'signing', 'mining'].includes(phase)}
+          >
+            Create goal on Fuji
+          </Button>
+          <TxStatus phase={phase} hash={hash} error={error} />
         </div>
-
-        <button
-          onClick={onSubmit}
-          disabled={!canSubmit}
-          className="w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
-        >
-          Create goal on Fuji
-        </button>
-
-        <TxStatus phase={phase} hash={hash} error={error} />
-      </div>
+      </Card>
     </div>
   )
 }
