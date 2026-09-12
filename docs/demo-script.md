@@ -19,13 +19,15 @@ Se lo bruci in una prova, la riserva è pronta: `0x1243deE45cb80E677907c3CE384D7
 - [ ] **Archivia i goal vecchi** dal browser del saver: apri `smoke` (×2) e `vacanza-indonesia`, premi **archive** su ognuno. Restano on-chain, spariscono dalla Dashboard e dalla tendina di Spend. Verifica che sotto compaia «3 archived goals · show» e che la Dashboard mostri solo `summer-holiday` e `new-laptop`.
 - [ ] Saldi di partenza (letti dai contratti il 2026-09-12 alle 18:20): saver **9,3 USDC** su Fuji e **0,0033 ETH** su Sepolia · merchant **4,4 USDC** su Fuji e **0,003 ETH su Sepolia** · goal `summer-holiday` **2,8 USDC** su 20 di target (×4) · goal `new-laptop` **1,0 USDC** su 3000 (×2).
 
-## 0:00 – 0:12 · Il problema
+## 0:00 – 0:15 · Chi sei e qual è il problema
 
-> "Saving loses to spending because it asks you to choose. Formica removes the choice: round up what you spend, and the change lands in a savings goal — an ERC-4626 vault earning yield on Aave, with its own ENS name."
+> "I'm [NOME]. Saving fails because it's a decision, and you have to make it every single time. Formica removes the decision: round up what you spend, and the change lands in a goal — an ERC-4626 vault earning yield on Aave, with its own ENS name."
 
-**A schermo:** la Dashboard con i goal e i saldi.
+**A schermo:** la Dashboard con i goal e i saldi. Faccia in camera nell'angolo: il manuale la chiede esplicitamente, ed è qui che serve di più.
 
-## 0:12 – 0:52 · L'arrotondamento, in diretta
+⏱️ Sono 45 parole, cioè ~15 secondi a ritmo tranquillo: tre in più dei 12 di prima. Li recuperi nel blocco seguente non indugiando dopo la conferma della transazione. Se sfori, l'unico pezzo che puoi accorciare senza perdere una prova è l'ultima frase della chiusura.
+
+## 0:15 – 0:52 · L'arrotondamento, in diretta
 
 **Fai:** Spend → goal `summer-holiday` (è già selezionato: è l'ultimo creato) → importo **4.30** → conferma.
 
