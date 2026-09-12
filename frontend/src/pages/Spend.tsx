@@ -92,9 +92,9 @@ export function Spend() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Spendi</h1>
+      <h1 className="text-xl font-bold">Spend</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Paghi il merchant e il round-up finisce nel tuo goal, in una sola transazione.
+        You pay the merchant and the round-up goes into your goal, in a single transaction.
       </p>
 
       <div className="mt-6 space-y-4">
@@ -112,12 +112,12 @@ export function Spend() {
             ))}
           </select>
           {meta.multiplier !== undefined && (
-            <span className="mt-1 block text-xs text-neutral-500">moltiplicatore x{meta.multiplier}</span>
+            <span className="mt-1 block text-xs text-neutral-500">multiplier x{meta.multiplier}</span>
           )}
         </label>
 
         <label className="block">
-          <span className="text-sm text-neutral-300">Importo (USDC)</span>
+          <span className="text-sm text-neutral-300">Amount (USDC)</span>
           <input
             value={amountInput}
             onChange={(event) => setAmountInput(event.target.value)}
@@ -136,13 +136,13 @@ export function Spend() {
             className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 font-mono text-xs outline-none focus:border-amber-500"
           />
           {merchantInput.trim() !== '' && !merchantValid && (
-            <span className="mt-1 block text-xs text-red-400">Indirizzo non valido.</span>
+            <span className="mt-1 block text-xs text-red-400">Invalid address.</span>
           )}
         </label>
 
         <div className="rounded-lg bg-neutral-900 p-3 text-sm">
           {amount === undefined || saving === undefined || total === undefined ? (
-            <p className="text-neutral-500">Inserisci un importo per l'anteprima.</p>
+            <p className="text-neutral-500">Enter an amount to see the preview.</p>
           ) : (
             <ul className="space-y-1 text-neutral-300">
               <li className="flex justify-between">
@@ -150,11 +150,11 @@ export function Spend() {
                 <span>{formatUsdc(amount)} USDC</span>
               </li>
               <li className="flex justify-between">
-                <span>Risparmio nel goal</span>
+                <span>Saved into the goal</span>
                 <span className="text-amber-400">+{formatUsdc(saving)} USDC</span>
               </li>
               <li className="flex justify-between border-t border-neutral-800 pt-1 font-medium">
-                <span>Addebito totale</span>
+                <span>Total charge</span>
                 <span>{formatUsdc(total)} USDC</span>
               </li>
             </ul>
@@ -162,10 +162,12 @@ export function Spend() {
         </div>
 
         <p className="text-xs text-neutral-500">
-          Saldo: {balance.data === undefined ? '…' : `${formatUsdc(balance.data)} USDC`}
+          Balance: {balance.data === undefined ? '…' : `${formatUsdc(balance.data)} USDC`}
         </p>
 
-        {insufficient === true && <p className="text-xs text-red-400">Saldo USDC insufficiente per pagamento + risparmio.</p>}
+        {insufficient === true && (
+          <p className="text-xs text-red-400">Not enough USDC for payment + saving.</p>
+        )}
 
         {needsApproval === true && (
           <button
@@ -173,7 +175,7 @@ export function Spend() {
             disabled={!canApprove}
             className="w-full rounded-lg border border-amber-500 px-4 py-2 font-medium text-amber-400 disabled:opacity-40"
           >
-            Approva USDC per il router
+            Approve USDC for the router
           </button>
         )}
         <TxStatus phase={approval.phase} hash={approval.hash} error={approval.error} />
@@ -183,7 +185,7 @@ export function Spend() {
           disabled={!canPay}
           className="w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
         >
-          Paga e risparmia
+          Pay and save
         </button>
         <TxStatus phase={payment.phase} hash={payment.hash} error={payment.error} />
       </div>

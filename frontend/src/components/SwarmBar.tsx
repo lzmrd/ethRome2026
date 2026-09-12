@@ -6,30 +6,30 @@ export function SwarmBar({ ledger }: { ledger: ReturnType<typeof useLedger> }) {
   return (
     <div className="mt-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
       <div>
-        <p className="font-medium">Libretto privato</p>
+        <p className="font-medium">Private ledger</p>
         {!identity ? (
           <p className="text-xs text-neutral-500">
-            Collega la tua identità Swarm per aggiungere il contesto delle spese.
+            Connect your Swarm identity to add context to your spending.
           </p>
         ) : canUpload ? (
           <p className="text-xs text-neutral-500">
-            Connesso come {identity.name}. Le note sono cifrate con la tua chiave.
-            {uploadMode === 'subsidised' ? ' Caricamento via gateway sovvenzionato.' : ''}
+            Connected as {identity.name}. Notes are encrypted with your key.
+            {uploadMode === 'subsidised' ? ' Uploading via subsidised gateway.' : ''}
           </p>
         ) : (
           <p className="text-xs text-amber-400">
             {uploadIssue === 'no-stamp'
-              ? 'Manca il francobollo postale: puoi leggere, non scrivere.'
+              ? 'No postage stamp: you can read, not write.'
               : uploadIssue === 'stamper-failed'
-                ? 'Il francobollo c’è ma il percorso di scrittura non è disponibile.'
-                : 'Caricamento non disponibile su questa identità.'}
+                ? 'The stamp exists but the write path is unavailable.'
+                : 'Upload not available for this identity.'}
           </p>
         )}
         {readError && <p className="text-xs text-amber-400">{readError}</p>}
       </div>
       {identity ? (
         <button onClick={refresh} className="rounded-lg border border-neutral-700 px-3 py-1 text-xs">
-          Rileggi da Swarm
+          Reload from Swarm
         </button>
       ) : (
         <button
@@ -37,7 +37,7 @@ export function SwarmBar({ ledger }: { ledger: ReturnType<typeof useLedger> }) {
           disabled={connecting}
           className="rounded-lg border border-emerald-600 px-3 py-1 text-xs text-emerald-400 disabled:opacity-40"
         >
-          {connecting ? 'Apro Swarm ID…' : 'Collega Swarm ID'}
+          {connecting ? 'Opening Swarm ID…' : 'Connect Swarm ID'}
         </button>
       )}
     </div>

@@ -82,14 +82,14 @@ export function Receive() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Incassa</h1>
+      <h1 className="text-xl font-bold">Receive</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Versa un'entrata: il destinatario incassa il netto, la differenza arrotondata finisce nel suo goal.
+        Pay in income: the recipient gets the net amount, the rounded difference goes into their goal.
       </p>
 
       <div className="mt-6 space-y-4">
         <label className="block">
-          <span className="text-sm text-neutral-300">Nome ENS o indirizzo del goal</span>
+          <span className="text-sm text-neutral-300">ENS name or goal address</span>
           <input
             value={vaultInput}
             onChange={(event) => setVaultInput(event.target.value)}
@@ -104,13 +104,13 @@ export function Receive() {
           )}
           {meta.label !== undefined && meta.owner !== undefined && (
             <span className="mt-1 block text-xs text-neutral-500">
-              goal "{meta.label}" di {shortAddress(meta.owner)} · x{meta.multiplier}
+              goal "{meta.label}" by {shortAddress(meta.owner)} · x{meta.multiplier}
             </span>
           )}
         </label>
 
         <label className="block">
-          <span className="text-sm text-neutral-300">Importo lordo (USDC)</span>
+          <span className="text-sm text-neutral-300">Gross amount (USDC)</span>
           <input
             value={amountInput}
             onChange={(event) => setAmountInput(event.target.value)}
@@ -122,19 +122,19 @@ export function Receive() {
 
         <div className="rounded-lg bg-neutral-900 p-3 text-sm">
           {amount === undefined || saving === undefined || net === undefined ? (
-            <p className="text-neutral-500">Inserisci un importo per l'anteprima.</p>
+            <p className="text-neutral-500">Enter an amount to see the preview.</p>
           ) : (
             <ul className="space-y-1 text-neutral-300">
               <li className="flex justify-between">
-                <span>Destinatario</span>
+                <span>Recipient</span>
                 <span>{formatUsdc(net)} USDC</span>
               </li>
               <li className="flex justify-between">
-                <span>Risparmio nel goal</span>
+                <span>Saved into the goal</span>
                 <span className="text-amber-400">+{formatUsdc(saving)} USDC</span>
               </li>
               <li className="flex justify-between border-t border-neutral-800 pt-1 font-medium">
-                <span>Addebito totale</span>
+                <span>Total charge</span>
                 <span>{formatUsdc(amount)} USDC</span>
               </li>
             </ul>
@@ -142,10 +142,10 @@ export function Receive() {
         </div>
 
         <p className="text-xs text-neutral-500">
-          Il tuo saldo (pagatore): {balance.data === undefined ? '…' : `${formatUsdc(balance.data)} USDC`}
+          Your balance (payer): {balance.data === undefined ? '…' : `${formatUsdc(balance.data)} USDC`}
         </p>
 
-        {insufficient === true && <p className="text-xs text-red-400">Saldo USDC insufficiente.</p>}
+        {insufficient === true && <p className="text-xs text-red-400">Not enough USDC balance.</p>}
 
         {needsApproval === true && (
           <button
@@ -153,7 +153,7 @@ export function Receive() {
             disabled={!canApprove}
             className="w-full rounded-lg border border-amber-500 px-4 py-2 font-medium text-amber-400 disabled:opacity-40"
           >
-            Approva USDC per il router
+            Approve USDC for the router
           </button>
         )}
         <TxStatus phase={approval.phase} hash={approval.hash} error={approval.error} />
@@ -163,7 +163,7 @@ export function Receive() {
           disabled={!canSend}
           className="w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
         >
-          Versa l'entrata
+          Send income
         </button>
         <TxStatus phase={income.phase} hash={income.hash} error={income.error} />
       </div>

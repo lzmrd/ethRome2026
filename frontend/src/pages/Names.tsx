@@ -143,9 +143,9 @@ export function Names() {
   if (!connection.isConnected) {
     return (
       <div className="mx-auto max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-6 text-center">
-        <h2 className="text-lg font-semibold">Connetti un wallet</h2>
+        <h2 className="text-lg font-semibold">Connect a wallet</h2>
         <p className="mt-2 text-sm text-neutral-400">
-          I nomi vivono su Sepolia (ENSv2 beta); i goal restano su Avalanche Fuji.
+          Names live on Sepolia (ENSv2 beta); goals stay on Avalanche Fuji.
         </p>
         <div className="mt-4 flex flex-col gap-2">
           {connectors.map((connector) => (
@@ -166,21 +166,21 @@ export function Names() {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Nomi</h1>
+      <h1 className="text-xl font-bold">Names</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Il tuo namespace ENSv2 su Sepolia: <code>{FORMICA_ROOT}</code>. Formica deploya registry e resolver, ma la
-        radice sei tu: Formica non può modificare i tuoi nomi.
+        Your ENSv2 namespace on Sepolia: <code>{FORMICA_ROOT}</code>. Formica deploys the registry and resolver, but
+        you are the root: Formica cannot modify your names.
       </p>
 
       {!onSepolia && (
         <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-          <p className="text-amber-300">Per registrare i nomi serve la rete Sepolia.</p>
+          <p className="text-amber-300">Registering names requires the Sepolia network.</p>
           <button
             className="mt-2 rounded-lg border border-amber-500 px-3 py-1.5 text-sm font-medium text-amber-400 disabled:opacity-40"
             disabled={switching}
             onClick={() => switchChain({ chainId: SEPOLIA_CHAIN_ID })}
           >
-            Passa a Sepolia
+            Switch to Sepolia
           </button>
         </div>
       )}
@@ -188,7 +188,7 @@ export function Names() {
       <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
         {myLabel ? (
           <>
-            <h2 className="font-semibold">Il tuo namespace</h2>
+            <h2 className="font-semibold">Your namespace</h2>
             <a
               className="mt-1 block font-mono text-sm text-amber-400 underline decoration-dotted"
               href={`${ENS_EXPLORER}${myLabel}.${FORMICA_ROOT}`}
@@ -198,7 +198,7 @@ export function Names() {
               {myLabel}.{FORMICA_ROOT}
             </a>
             <p className="mt-2 text-xs text-neutral-500">
-              sei tu la radice di questo namespace: Formica non può modificarlo
+              you are the root of this namespace: Formica cannot modify it
             </p>
             <dl className="mt-3 space-y-1 text-xs text-neutral-400">
               <div className="flex justify-between gap-2">
@@ -217,9 +217,9 @@ export function Names() {
           </>
         ) : (
           <>
-            <h2 className="font-semibold">Reclama il tuo namespace</h2>
+            <h2 className="font-semibold">Claim your namespace</h2>
             <p className="mt-1 text-xs text-neutral-500">
-              Una transazione su Sepolia: registry e resolver tuoi, per sempre.
+              One transaction on Sepolia: your own registry and resolver, forever.
             </p>
             <input
               value={labelInput}
@@ -229,12 +229,12 @@ export function Names() {
             />
             {labelInput.trim() !== '' && !labelValid && (
               <span className="mt-1 block text-xs text-red-400">
-                Minuscole, numeri e trattini; niente punti, max 32 caratteri.
+                Lowercase letters, numbers and hyphens; no dots, max 32 characters.
               </span>
             )}
             {labelValid && (
               <span className="mt-1 block text-xs text-neutral-500">
-                diventerà {normalizedLabel}.{FORMICA_ROOT}
+                will become {normalizedLabel}.{FORMICA_ROOT}
               </span>
             )}
             <button
@@ -242,7 +242,7 @@ export function Names() {
               disabled={!canClaim}
               className="mt-3 w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
             >
-              Reclama il tuo namespace
+              Claim your namespace
             </button>
             <TxStatus phase={claim.phase} hash={claim.hash} error={claim.error} />
           </>
@@ -251,18 +251,18 @@ export function Names() {
 
       {myLabel && ledger.identity && (
         <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="font-semibold">Libretto privato</h2>
+          <h2 className="font-semibold">Private ledger</h2>
           <p className="mt-1 text-xs text-neutral-500">
-            Il record <code>{LEDGER_RECORD_KEY}</code> pubblica nel nome il riferimento al feed Swarm cifrato: il
-            libretto diventa trovabile a partire da {myLabel}.{FORMICA_ROOT} senza passare da questa app. Una
-            transazione, poi le note restano fuori catena.
+            The <code>{LEDGER_RECORD_KEY}</code> record publishes the encrypted Swarm feed reference in the name: the
+            ledger becomes discoverable from {myLabel}.{FORMICA_ROOT} without this app. One transaction, then the
+            notes stay off-chain.
           </p>
           {ledgerRecord.data ? (
             <p className="mt-3 break-all font-mono text-xs text-neutral-400">
               {LEDGER_RECORD_KEY} = {ledgerRecord.data}
             </p>
           ) : (
-            <p className="mt-3 text-xs text-neutral-600">nessun manifest pubblicato nel nome</p>
+            <p className="mt-3 text-xs text-neutral-600">no manifest published in the name</p>
           )}
           <button
             onClick={onPublishManifest}
@@ -270,15 +270,15 @@ export function Names() {
             className="mt-3 w-full rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-400 disabled:opacity-40"
           >
             {publishing
-              ? 'Creo il manifest…'
+              ? 'Creating manifest…'
               : publishBusy
-                ? 'Invio la transazione…'
+                ? 'Sending transaction…'
                 : ledgerRecord.data
-                  ? 'Ripubblica nel nome'
-                  : 'Pubblica nel nome'}
+                  ? 'Republish in the name'
+                  : 'Publish in the name'}
           </button>
           {!ledger.canUpload && (
-            <p className="mt-1 text-xs text-amber-400">Serve un francobollo postale per creare il manifest.</p>
+            <p className="mt-1 text-xs text-amber-400">A postage stamp is required to create the manifest.</p>
           )}
           {publishError && <p className="mt-1 text-xs text-red-400">{publishError}</p>}
           <TxStatus phase={publish.phase} hash={publish.hash} error={publish.error} />
@@ -287,14 +287,14 @@ export function Names() {
 
       {myLabel && (
         <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="font-semibold">Nomi dei goal</h2>
+          <h2 className="font-semibold">Goal names</h2>
           <p className="mt-1 text-xs text-neutral-500">
-            Ogni nome è due transazioni su Sepolia: la registrazione nel tuo registry e il record che punta al vault
-            su Fuji.
+            Each name is two transactions on Sepolia: the registration in your registry and the record pointing to
+            the vault on Fuji.
           </p>
-          {goals.isLoading && <p className="mt-3 text-sm text-neutral-400">Lettura goal…</p>}
+          {goals.isLoading && <p className="mt-3 text-sm text-neutral-400">Loading goals…</p>}
           {goals.data && goals.data.length === 0 && (
-            <p className="mt-3 text-sm text-neutral-500">Non hai ancora goal su Fuji.</p>
+            <p className="mt-3 text-sm text-neutral-500">You have no goals on Fuji yet.</p>
           )}
           <ul className="mt-3 divide-y divide-neutral-800">
             {vaults.map((vault, index) => {
@@ -322,7 +322,7 @@ export function Names() {
           className="mt-6 text-sm text-neutral-400 underline"
           onClick={() => switchChain({ chainId: avalancheFuji.id })}
         >
-          Torna a Fuji
+          Back to Fuji
         </button>
       )}
     </div>
@@ -454,7 +454,7 @@ function GoalNameRow({
             disabled={!canAct}
             className="rounded-lg border border-amber-500 px-3 py-1.5 text-xs font-medium text-amber-400 disabled:opacity-40"
           >
-            Dai un nome
+            Name it
           </button>
         ) : (
           <button
@@ -462,7 +462,7 @@ function GoalNameRow({
             disabled={!canAct}
             className="rounded-lg border border-amber-500 px-3 py-1.5 text-xs font-medium text-amber-400 disabled:opacity-40"
           >
-            Collega il vault
+            Link the vault
           </button>
         )}
       </div>

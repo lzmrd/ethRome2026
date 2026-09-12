@@ -48,7 +48,7 @@ export function GoalCard({
         <p className="text-xs text-neutral-400">
           {meta.target !== undefined && meta.target > 0n
             ? `target ${formatUsdc(meta.target)} USDC`
-            : 'nessun target'}
+            : 'no target'}
         </p>
       </div>
 

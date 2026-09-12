@@ -84,14 +84,14 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Crea un goal</h1>
+      <h1 className="text-xl font-bold">Create a goal</h1>
       <p className="mt-1 text-sm text-neutral-400">
-        Ogni goal è un vault ERC-4626 separato. Il nome verrà usato come subname ENS in M2.
+        Each goal is a separate ERC-4626 vault. The name becomes its ENS subname.
       </p>
 
       <div className="mt-6 space-y-4">
         <label className="block">
-          <span className="text-sm text-neutral-300">Nome</span>
+          <span className="text-sm text-neutral-300">Name</span>
           <input
             value={labelInput}
             onChange={(event) => setLabelInput(event.target.value)}
@@ -100,17 +100,17 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
           />
           {labelInput.trim() !== '' && label === undefined && (
             <span className="mt-1 block text-xs text-red-400">
-              Nome non valido: minuscole, numeri e trattini; niente punti.
+              Invalid name: lowercase letters, numbers and hyphens; no dots.
             </span>
           )}
-          {duplicate && <span className="mt-1 block text-xs text-red-400">Hai già un goal con questo nome.</span>}
+          {duplicate && <span className="mt-1 block text-xs text-red-400">You already have a goal with this name.</span>}
           {label !== undefined && !duplicate && (
-            <span className="mt-1 block text-xs text-neutral-500">nome normalizzato: {label}</span>
+            <span className="mt-1 block text-xs text-neutral-500">normalized name: {label}</span>
           )}
         </label>
 
         <fieldset>
-          <legend className="text-sm text-neutral-300">Modalità</legend>
+          <legend className="text-sm text-neutral-300">Mode</legend>
           <div className="mt-1 flex gap-2">
             <button
               type="button"
@@ -119,7 +119,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
                 mode === 0 ? 'border-amber-500 bg-amber-500/10' : 'border-neutral-700'
               }`}
             >
-              Liquid (nessun rischio)
+              Liquid (no risk)
             </button>
             <button
               type="button"
@@ -135,7 +135,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
 
         <div className="flex gap-4">
           <label className="block flex-1">
-            <span className="text-sm text-neutral-300">Moltiplicatore (1-10)</span>
+            <span className="text-sm text-neutral-300">Multiplier (1-10)</span>
             <input
               type="number"
               min={1}
@@ -144,10 +144,10 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
               onChange={(event) => setMultiplier(Number(event.target.value))}
               className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:border-amber-500"
             />
-            {!multiplierValid && <span className="mt-1 block text-xs text-red-400">Da 1 a 10.</span>}
+            {!multiplierValid && <span className="mt-1 block text-xs text-red-400">From 1 to 10.</span>}
           </label>
           <label className="block flex-1">
-            <span className="text-sm text-neutral-300">Target in USDC (opzionale)</span>
+            <span className="text-sm text-neutral-300">Target in USDC (optional)</span>
             <input
               value={targetInput}
               onChange={(event) => setTargetInput(event.target.value)}
@@ -155,13 +155,13 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
               className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 outline-none focus:border-amber-500"
             />
             {targetInput.trim() !== '' && target === undefined && (
-              <span className="mt-1 block text-xs text-red-400">Importo non valido.</span>
+              <span className="mt-1 block text-xs text-red-400">Invalid amount.</span>
             )}
           </label>
         </div>
 
         <div className="rounded-lg bg-neutral-900 p-3 text-xs text-neutral-400">
-          Anteprima: {label ?? '…'} · {mode === 1 ? 'Yield su Aave' : 'Liquid'} · x{multiplier} · target{' '}
+          Preview: {label ?? '…'} · {mode === 1 ? 'Yield on Aave' : 'Liquid'} · x{multiplier} · target{' '}
           {target === undefined ? '…' : `${formatUsdc(target)} USDC`}
         </div>
 
@@ -170,7 +170,7 @@ export function CreateGoal({ navigate }: { navigate: (path: string) => void }) {
           disabled={!canSubmit}
           className="w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
         >
-          Crea goal su Fuji
+          Create goal on Fuji
         </button>
 
         <TxStatus phase={phase} hash={hash} error={error} />

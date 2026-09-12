@@ -37,7 +37,7 @@ export function EntryNote({
             disabled={!ledger.canUpload}
             className="text-left text-xs text-neutral-600 underline decoration-dotted disabled:no-underline"
           >
-            {ledger.canUpload ? 'aggiungi contesto' : 'nessun contesto'}
+            {ledger.canUpload ? 'add context' : 'no context'}
           </button>
         )}
         {reference && (
@@ -64,19 +64,19 @@ export function EntryNote({
         <input
           value={merchant}
           onChange={(e) => setMerchant(e.target.value)}
-          placeholder="negozio"
+          placeholder="shop"
           className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 text-xs"
         />
         <input
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          placeholder="categoria"
+          placeholder="category"
           className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 text-xs"
         />
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="nota"
+          placeholder="note"
           className="rounded border border-neutral-700 bg-neutral-950 px-2 py-1 text-xs"
         />
         <button
@@ -84,10 +84,10 @@ export function EntryNote({
           onClick={onSave}
           className="rounded border border-emerald-600 px-2 py-1 text-xs text-emerald-400 disabled:opacity-40"
         >
-          {ledger.saving ? 'Salvo…' : 'Salva'}
+          {ledger.saving ? 'Saving…' : 'Save'}
         </button>
         <button onClick={() => setEditing(false)} className="px-2 py-1 text-xs text-neutral-500">
-          annulla
+          cancel
         </button>
       </div>
       {ledger.error && <p className="mt-1 text-xs text-amber-400">{ledger.error}</p>}

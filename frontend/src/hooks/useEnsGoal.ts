@@ -59,16 +59,16 @@ export function useGoalTarget(input: string): GoalTarget {
   const kind = looksLikeName ? 'name' : 'address'
 
   if (looksLikeName && resolution.isError) {
-    return { kind, isLoading: false, error: 'Nome non risolvibile su Sepolia' }
+    return { kind, isLoading: false, error: 'Name not resolvable on Sepolia' }
   }
   if (looksLikeName && !resolution.isLoading && !resolution.data) {
-    return { kind, isLoading: false, error: 'Questo nome non ha un indirizzo su Fuji' }
+    return { kind, isLoading: false, error: 'This name has no address on Fuji' }
   }
   if (!looksLikeName && !isAddress(trimmed)) {
-    return { kind, isLoading: false, error: 'Indirizzo non valido' }
+    return { kind, isLoading: false, error: 'Invalid address' }
   }
   if (candidate && isVault.data === false) {
-    return { kind, vault: candidate, isLoading: false, error: 'Non è un goal Formica' }
+    return { kind, vault: candidate, isLoading: false, error: 'Not a Formica goal' }
   }
 
   return { kind, vault: candidate, name: looksLikeName ? trimmed : undefined, isLoading }

@@ -30,15 +30,15 @@ export function useLedger() {
       }
       if (payload.length === 0) return EMPTY_LEDGER
       const ledger = tryDecodeLedger(payload)
-      if (!ledger) throw new Error('Libretto non leggibile con questa identità')
+      if (!ledger) throw new Error('Ledger not readable with this identity')
       return ledger
     },
   })
 
   const mutation = useMutation({
     mutationFn: async (entry: LedgerEntry) => {
-      if (!swarm.client || !swarm.keys) throw new Error('Identità Swarm non connessa')
-      if (!swarm.canUpload) throw new Error('Manca il francobollo postale: non posso scrivere su Swarm')
+      if (!swarm.client || !swarm.keys) throw new Error('Swarm identity not connected')
+      if (!swarm.canUpload) throw new Error('No postage stamp: cannot write to Swarm')
       const next = upsertEntry(query.data ?? EMPTY_LEDGER, entry)
       const writer = swarm.client.makeSequentialFeedWriter({ topic: LEDGER_TOPIC, signer: swarm.keys.signer })
       const result = await writer.uploadRawPayload(encodeLedger(next), { encryptionKey: swarm.keys.encryptionKey })

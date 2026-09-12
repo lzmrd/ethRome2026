@@ -4,10 +4,10 @@ import { shortAddress } from '../lib/format'
 
 const TABS: { label: string; path: string; route: Route['name'] }[] = [
   { label: 'Dashboard', path: '/', route: 'dashboard' },
-  { label: 'Crea goal', path: '/create', route: 'create' },
-  { label: 'Spendi', path: '/spend', route: 'spend' },
-  { label: 'Incassa', path: '/receive', route: 'receive' },
-  { label: 'Nomi', path: '/names', route: 'names' },
+  { label: 'Create goal', path: '/create', route: 'create' },
+  { label: 'Spend', path: '/spend', route: 'spend' },
+  { label: 'Receive', path: '/receive', route: 'receive' },
+  { label: 'Names', path: '/names', route: 'names' },
 ]
 
 export function Header({ current, navigate }: { current: Route['name']; navigate: (path: string) => void }) {
@@ -36,10 +36,10 @@ export function Header({ current, navigate }: { current: Route['name']; navigate
         <div className="text-sm text-neutral-400">
           {connection.isConnected && connection.address ? (
             <button onClick={() => disconnect.mutate()} className="hover:text-white">
-              {shortAddress(connection.address)} · esci
+              {shortAddress(connection.address)} · sign out
             </button>
           ) : (
-            'non connesso'
+            'not connected'
           )}
         </div>
       </div>

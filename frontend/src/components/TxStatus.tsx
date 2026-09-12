@@ -4,11 +4,11 @@ import type { TxPhase } from '../lib/tx'
 
 const LABELS: Record<TxPhase, string> = {
   idle: '',
-  simulating: 'Verifica della transazione…',
-  signing: 'Firma nel wallet…',
-  mining: 'In attesa di conferma…',
-  success: 'Transazione confermata',
-  error: 'Errore',
+  simulating: 'Simulating transaction…',
+  signing: 'Confirm in your wallet…',
+  mining: 'Waiting for confirmation…',
+  success: 'Transaction confirmed',
+  error: 'Error',
 }
 
 export function TxStatus({ phase, hash, error }: { phase: TxPhase; hash?: Hex; error?: string }) {

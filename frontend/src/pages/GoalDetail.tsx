@@ -108,9 +108,9 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
   if (!valid) {
     return (
       <div>
-        <p className="text-red-400">Indirizzo vault non valido.</p>
+        <p className="text-red-400">Invalid vault address.</p>
         <button className="mt-2 text-sm underline" onClick={() => navigate('/')}>
-          Torna alla dashboard
+          Back to dashboard
         </button>
       </div>
     )
@@ -150,18 +150,18 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
       </div>
 
       {isVault.data === false && (
-        <p className="mt-2 text-xs text-red-400">Attenzione: non risulta un vault registrato nella factory.</p>
+        <p className="mt-2 text-xs text-red-400">Warning: not a vault registered in the factory.</p>
       )}
 
       <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
         <div className="flex items-end justify-between">
           <div>
-            <p className="text-xs text-neutral-500">Saldo</p>
+            <p className="text-xs text-neutral-500">Balance</p>
             <p className="text-3xl font-bold">{balance === undefined ? '…' : formatUsdc(balance)} USDC</p>
           </div>
           <div className="text-right text-xs text-neutral-400">
             <p>yield {earned === undefined ? '…' : `+${formatUsdc(earned, 4)} USDC`}</p>
-            <p>versato netto {meta.netDeposited === undefined ? '…' : `${formatUsdc(meta.netDeposited)} USDC`}</p>
+            <p>net deposited {meta.netDeposited === undefined ? '…' : `${formatUsdc(meta.netDeposited)} USDC`}</p>
             {meta.mode === 1 && apy !== undefined && <p>Aave APY {apy.toFixed(2)}%</p>}
           </div>
         </div>
@@ -170,14 +170,14 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
           <p className="mt-1 text-xs text-neutral-500">
             {meta.target !== undefined && meta.target > 0n
               ? `target ${formatUsdc(meta.target)} USDC`
-              : 'nessun target impostato'}
+              : 'no target set'}
           </p>
         </div>
       </div>
 
       {isOwner ? (
         <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="font-semibold">Preleva</h2>
+          <h2 className="font-semibold">Withdraw</h2>
           <div className="mt-2 flex gap-2">
             <input
               value={amountInput}
@@ -193,46 +193,46 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
               Max
             </button>
           </div>
-          {overBalance === true && <p className="mt-1 text-xs text-red-400">Importo oltre il saldo del goal.</p>}
+          {overBalance === true && <p className="mt-1 text-xs text-red-400">Amount above the goal balance.</p>}
           <div className="mt-3 flex gap-2">
             <button
               onClick={onWithdraw}
               disabled={!canWithdraw}
               className="flex-1 rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
             >
-              Preleva importo
+              Withdraw amount
             </button>
             <button
               onClick={onWithdrawMax}
               disabled={!canWithdrawMax}
               className="flex-1 rounded-lg border border-amber-500 px-4 py-2 font-medium text-amber-400 disabled:opacity-40"
             >
-              Preleva tutto
+              Withdraw all
             </button>
           </div>
           <TxStatus phase={withdrawing.phase} hash={withdrawing.hash} error={withdrawing.error} />
         </div>
       ) : (
-        <p className="mt-6 text-xs text-neutral-500">Solo il proprietario ({meta.owner ? shortAddress(meta.owner) : '…'}) può prelevare.</p>
+        <p className="mt-6 text-xs text-neutral-500">Only the owner ({meta.owner ? shortAddress(meta.owner) : '…'}) can withdraw.</p>
       )}
 
       <SwarmBar ledger={ledger} />
 
       <div className="mt-6">
-        <h2 className="font-semibold">Storico</h2>
-        {events.isLoading && <p className="mt-2 text-sm text-neutral-400">Lettura eventi…</p>}
+        <h2 className="font-semibold">History</h2>
+        {events.isLoading && <p className="mt-2 text-sm text-neutral-400">Loading events…</p>}
         {events.data && events.data.length === 0 && (
-          <p className="mt-2 text-sm text-neutral-500">Nessun movimento ancora.</p>
+          <p className="mt-2 text-sm text-neutral-500">No movements yet.</p>
         )}
         <ul className="mt-2 divide-y divide-neutral-800 rounded-xl border border-neutral-800 bg-neutral-900">
           {(events.data ?? []).map((event) => (
             <li key={`${event.transactionHash}-${event.kind}-${event.blockNumber}`} className="flex flex-col gap-1 px-4 py-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className={event.kind === 'Deposit' ? 'text-emerald-400' : 'text-neutral-300'}>
-                  {event.kind === 'Deposit' ? 'Deposito' : 'Prelievo'} {formatUsdc(event.assets)} USDC
+                  {event.kind === 'Deposit' ? 'Deposit' : 'Withdrawal'} {formatUsdc(event.assets)} USDC
                 </span>
                 <span className="flex items-center gap-3 text-xs text-neutral-500">
-                  <span>blocco {event.blockNumber.toString()}</span>
+                  <span>block {event.blockNumber.toString()}</span>
                   <a
                     className="underline decoration-dotted"
                     href={`${SNOWTRACE_TX}${event.transactionHash}`}
@@ -248,7 +248,7 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
           ))}
         </ul>
         <p className="mt-2 text-xs text-neutral-600">
-          Ultimo aggiornamento {formatDate(events.dataUpdatedAt ? BigInt(Math.floor(events.dataUpdatedAt / 1000)) : undefined)}
+          Last update {formatDate(events.dataUpdatedAt ? BigInt(Math.floor(events.dataUpdatedAt / 1000)) : undefined)}
         </p>
       </div>
     </div>
