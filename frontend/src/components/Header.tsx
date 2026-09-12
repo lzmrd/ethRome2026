@@ -1,6 +1,7 @@
 import { useConnection, useDisconnect } from 'wagmi'
 import type { Route } from '../lib/hashRoute'
 import { shortAddress } from '../lib/format'
+import { Logo } from './Logo'
 import { cx } from './ui'
 
 const TABS: { label: string; path: string; route: Route['name'] }[] = [
@@ -20,11 +21,9 @@ export function Header({ current, navigate }: { current: Route['name']; navigate
       <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-base font-semibold tracking-tight"
+          className="group flex items-center gap-2 text-base font-semibold tracking-tight"
         >
-          <span className="grid size-7 place-items-center rounded-lg bg-brand text-sm font-bold text-neutral-950">
-            F
-          </span>
+          <Logo size={26} className="transition duration-300 ease-soft group-hover:rotate-6" />
           Formica
         </button>
 
