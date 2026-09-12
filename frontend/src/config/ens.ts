@@ -31,6 +31,8 @@ export const ensRegistryAbi = parseAbi([
 export const ensResolverAbi = parseAbi([
   'function setAddr(bytes32 node, uint256 coinType, bytes value)',
   'function addr(bytes32 node, uint256 coinType) view returns (bytes)',
+  'function setText(bytes32 node, string key, string value)',
+  'function text(bytes32 node, string key) view returns (string)',
 ])
 
 export const ENS_EXPLORER = 'https://explorer.ens.dev/name/'

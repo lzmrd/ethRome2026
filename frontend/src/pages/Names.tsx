@@ -18,6 +18,8 @@ import {
   ensResolverAbi,
 } from '../config/ens'
 import { useUserGoals, useVaultLabels } from '../hooks/useGoals'
+import { useLedger } from '../hooks/useLedger'
+import { LEDGER_RECORD_KEY, LEDGER_TOPIC } from '../config/swarm'
 import { shortAddress } from '../lib/format'
 import { useTx } from '../lib/tx'
 
@@ -62,6 +64,50 @@ export function Names() {
   })
 
   const claim = useTx(SEPOLIA_CHAIN_ID)
+
+  const ledger = useLedger()
+  const userNode = myLabel ? namehash(`${myLabel}.${FORMICA_ROOT}`) : undefined
+  const userResolver = resolver.data && resolver.data !== zeroAddress ? resolver.data : undefined
+  const ledgerRecord = useReadContract({
+    address: userResolver,
+    abi: ensResolverAbi,
+    functionName: 'text',
+    args: userNode ? [userNode, LEDGER_RECORD_KEY] : undefined,
+    chainId: SEPOLIA_CHAIN_ID,
+    query: { enabled: Boolean(userResolver && userNode) },
+  })
+  const publish = useTx(SEPOLIA_CHAIN_ID)
+  const [publishing, setPublishing] = useState(false)
+  const [publishError, setPublishError] = useState<string>()
+
+  useEffect(() => {
+    if (publish.phase === 'success') void ledgerRecord.refetch()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publish.phase])
+
+  async function onPublishManifest() {
+    if (!account || !userResolver || !userNode || !ledger.client || !ledger.keys) return
+    setPublishError(undefined)
+    setPublishing(true)
+    try {
+      // Il feed è firmato dal signer derivato, non dall'app signer: il manifest
+      // deve dichiararne l'owner, altrimenti pubblicherebbe un feed vuoto.
+      const manifestRef = await ledger.client.createFeedManifest(LEDGER_TOPIC, { owner: ledger.keys.owner })
+      await publish.run({
+        account,
+        address: userResolver,
+        abi: ensResolverAbi,
+        functionName: 'setText',
+        args: [userNode, LEDGER_RECORD_KEY, manifestRef],
+      })
+    } catch (e) {
+      setPublishError(e instanceof Error ? e.message : 'Creazione del manifest fallita')
+    } finally {
+      setPublishing(false)
+    }
+  }
+
+  const publishBusy = publishing || ['simulating', 'signing', 'mining'].includes(publish.phase)
 
   useEffect(() => {
     if (claim.phase === 'success') void labelQuery.refetch()
@@ -196,6 +242,42 @@ export function Names() {
           </>
         )}
       </div>
+
+      {myLabel && ledger.identity && (
+        <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+          <h2 className="font-semibold">Libretto privato</h2>
+          <p className="mt-1 text-xs text-neutral-500">
+            Il record <code>{LEDGER_RECORD_KEY}</code> pubblica nel nome il riferimento al feed Swarm cifrato: il
+            libretto diventa trovabile a partire da {myLabel}.{FORMICA_ROOT} senza passare da questa app. Una
+            transazione, poi le note restano fuori catena.
+          </p>
+          {ledgerRecord.data ? (
+            <p className="mt-3 break-all font-mono text-xs text-neutral-400">
+              {LEDGER_RECORD_KEY} = {ledgerRecord.data}
+            </p>
+          ) : (
+            <p className="mt-3 text-xs text-neutral-600">nessun manifest pubblicato nel nome</p>
+          )}
+          <button
+            onClick={onPublishManifest}
+            disabled={!onSepolia || !ledger.canUpload || publishBusy || !userResolver || !userNode}
+            className="mt-3 w-full rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-400 disabled:opacity-40"
+          >
+            {publishing
+              ? 'Creo il manifest…'
+              : publishBusy
+                ? 'Invio la transazione…'
+                : ledgerRecord.data
+                  ? 'Ripubblica nel nome'
+                  : 'Pubblica nel nome'}
+          </button>
+          {!ledger.canUpload && (
+            <p className="mt-1 text-xs text-amber-400">Serve un francobollo postale per creare il manifest.</p>
+          )}
+          {publishError && <p className="mt-1 text-xs text-red-400">{publishError}</p>}
+          <TxStatus phase={publish.phase} hash={publish.hash} error={publish.error} />
+        </div>
+      )}
 
       {myLabel && (
         <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
