@@ -15,14 +15,18 @@ export function App() {
     <div className="min-h-screen">
       <Header current={route.name} navigate={navigate} />
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <ChainGuard>
-          {route.name === 'dashboard' && <Dashboard navigate={navigate} />}
-          {route.name === 'create' && <CreateGoal navigate={navigate} />}
-          {route.name === 'spend' && <Spend />}
-          {route.name === 'receive' && <Receive />}
-          {route.name === 'goal' && <GoalDetail address={route.address} navigate={navigate} />}
-        </ChainGuard>
-        {route.name === 'names' && <Names />}
+        {/* La pagina Nomi vive su Sepolia: il guard di Fuji non la riguarda. */}
+        {route.name === 'names' ? (
+          <Names />
+        ) : (
+          <ChainGuard>
+            {route.name === 'dashboard' && <Dashboard navigate={navigate} />}
+            {route.name === 'create' && <CreateGoal navigate={navigate} />}
+            {route.name === 'spend' && <Spend />}
+            {route.name === 'receive' && <Receive />}
+            {route.name === 'goal' && <GoalDetail address={route.address} navigate={navigate} />}
+          </ChainGuard>
+        )}
       </main>
     </div>
   )
