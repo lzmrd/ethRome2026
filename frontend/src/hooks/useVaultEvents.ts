@@ -20,14 +20,19 @@ export function useVaultEvents(vault: Address) {
   return useQuery({
     queryKey: ['vault-events', vault],
     enabled: Boolean(client),
-    refetchInterval: 15_000,
+    refetchInterval: 20_000,
     queryFn: async (): Promise<VaultEvent[]> => {
       if (!client) return []
       const latest = await client.getBlockNumber()
       const events: VaultEvent[] = []
 
-      for (let from = DEPLOY_BLOCK; from <= latest; from += CHUNK) {
-        const to = from + CHUNK - 1n > latest ? latest : from + CHUNK - 1n
+      // Si scorre all'indietro dal blocco piu' recente e ci si ferma appena si
+      // hanno MAX_EVENTS: la cronologia utile e' sempre in coda, e cosi' il
+      // numero di chiamate non cresce con l'eta' del deploy.
+      let to = latest
+      while (to >= DEPLOY_BLOCK && events.length < MAX_EVENTS) {
+        const span = to - DEPLOY_BLOCK + 1n
+        const from = span > CHUNK ? to - CHUNK + 1n : DEPLOY_BLOCK
         const [deposits, withdrawals] = await Promise.all([
           client.getContractEvents({ address: vault, abi: vaultAbi, eventName: 'Deposit', fromBlock: from, toBlock: to }),
           client.getContractEvents({
@@ -46,6 +51,8 @@ export function useVaultEvents(vault: Address) {
           const args = log.args as { assets: bigint }
           events.push({ kind: 'Withdraw', assets: args.assets, transactionHash: log.transactionHash, blockNumber: log.blockNumber })
         }
+        if (from === DEPLOY_BLOCK) break
+        to = from - 1n
       }
 
       return events.sort((a, b) => Number(b.blockNumber - a.blockNumber)).slice(0, MAX_EVENTS)

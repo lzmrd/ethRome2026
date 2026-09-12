@@ -3,12 +3,23 @@ import type { Account, Address, Hex, SimulateContractParameters } from 'viem'
 import { usePublicClient, useWaitForTransactionReceipt, useWriteContract } from 'wagmi'
 import { humanizeTxError } from './errors'
 
-export const FEE_OVERRIDES = {
-  maxPriorityFeePerGas: 1n,
-  maxFeePerGas: 2000n,
-} as const
+type Fees = { maxPriorityFeePerGas: bigint; maxFeePerGas: bigint }
+
+// Fuji ha base fee ~10 wei: tip minima e tetto basso, ma calcolato sul blocco
+// corrente cosi' una risalita della base fee non fa fallire ogni tx.
+export const FEE_FLOOR: Fees = { maxPriorityFeePerGas: 1n, maxFeePerGas: 2000n }
 
 export type TxPhase = 'idle' | 'simulating' | 'signing' | 'mining' | 'success' | 'error'
+
+async function currentFees(client: { getBlock: () => Promise<{ baseFeePerGas?: bigint | null }> }): Promise<Fees> {
+  try {
+    const base = (await client.getBlock()).baseFeePerGas ?? 0n
+    const cap = base * 4n
+    return { maxPriorityFeePerGas: 1n, maxFeePerGas: cap > FEE_FLOOR.maxFeePerGas ? cap : FEE_FLOOR.maxFeePerGas }
+  } catch {
+    return FEE_FLOOR
+  }
+}
 
 export function useTx() {
   const publicClient = usePublicClient()
@@ -38,7 +49,8 @@ export function useTx() {
     setHash(undefined)
     setPhase('simulating')
     try {
-      const simulateParams = { ...params, ...FEE_OVERRIDES } as Parameters<
+      const fees = await currentFees(publicClient)
+      const simulateParams = { ...params, ...fees } as Parameters<
         typeof publicClient.simulateContract
       >[0]
       const { request } = await publicClient.simulateContract(simulateParams)
