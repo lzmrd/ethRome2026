@@ -10,7 +10,7 @@ Se lo bruci in una prova, la riserva è pronta: `0x1243deE45cb80E677907c3CE384D7
 
 ## Prima di premere REC
 
-- [ ] Dev server **solo** su `http://localhost:5173`. Se la 5174 è ancora accesa, spegnila: il libretto Swarm è legato all'origine e dalla 5174 risulterebbe vuoto.
+- [ ] Dev server **solo** su `http://localhost:5173`, avviato dal tuo terminale con `cd frontend && pnpm dev --port 5173 --strictPort`: se la porta è occupata si ferma con un errore invece di ripiegare in silenzio sulla 5174, dove il libretto Swarm — legato all'origine — risulterebbe vuoto.
 - [ ] Browser A: app sulla Dashboard, wallet **saver** `0x6567…CB5f`, rete **Fuji**, identità Swarm `0xfede` connessa.
 - [ ] Browser B: **un altro browser o un profilo separato, mai una finestra privata** (là la sessione Swarm è nuova, e in Safari svanisce alla chiusura). Stessa app su `http://localhost:5173`, **un wallet qualunque su Fuji** (basta un account nuovo e vuoto: il dettaglio sta dietro il guard della catena, senza wallet vedresti «Connect a wallet», ma da non proprietario la pagina è identica tranne la riga «Only the owner … can withdraw»; non serve reimportare la chiave del saver), identità Swarm `0xfede` **già connessa** — è questa, non il wallet, che deve coincidere fra i due browser, pagina fermo sul dettaglio di `summer-holiday`. Serve solo da ricaricare in diretta.
 - [ ] Prova il reload di Browser B **prima** di REC: l'identità Swarm deve restare connessa da sola (la sessione vive nella partizione fino al `disconnect`). Se invece compare «Connect Swarm ID», il login andrebbe fatto in diretta con la password: rifallo adesso e riprova.
