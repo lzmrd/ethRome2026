@@ -1,6 +1,6 @@
 # Formica M2 — Pagare a un nome ENSv2
 
-**Stato:** approvato 2026-09-12 13:55 · **Supera** il §6 della spec principale (`2026-09-11-formica-design.md`), che resta valido per il contesto e per i record.
+**Stato:** approvato 2026-09-12 13:05 · **Supera** il §6 della spec principale (`2026-09-11-formica-design.md`), che resta valido per il contesto e per i record.
 
 **Obiettivo in una riga:** pagare scrivendo `vacanza.mario.formica.eth` invece di un indirizzo, con il nome su Sepolia (ENSv2 beta) che risolve al `GoalVault` su Avalanche Fuji.
 
