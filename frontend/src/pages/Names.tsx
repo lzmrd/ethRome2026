@@ -91,8 +91,11 @@ export function Names() {
     setPublishing(true)
     try {
       // Il feed è firmato dal signer derivato, non dall'app signer: il manifest
-      // deve dichiararne l'owner, altrimenti pubblicherebbe un feed vuoto.
-      const manifestRef = await ledger.client.createFeedManifest(LEDGER_TOPIC, { owner: ledger.keys.owner })
+      // deve dichiararne l'owner (40 hex senza 0x, come valida il proxy),
+      // altrimenti pubblicherebbe un feed vuoto.
+      const manifestRef = await ledger.client.createFeedManifest(LEDGER_TOPIC, {
+        owner: ledger.keys.owner.slice(2),
+      })
       await publish.run({
         account,
         address: userResolver,
