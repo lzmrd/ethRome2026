@@ -1,23 +1,32 @@
 import { useLedger } from '../hooks/useLedger'
+import { Button } from './ui'
 
 export function SwarmBar({ ledger }: { ledger: ReturnType<typeof useLedger> }) {
   const { identity, canUpload, uploadMode, uploadIssue, connect, connecting, refresh, readError } = ledger
 
   return (
-    <div className="mt-6 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-3 text-sm">
-      <div>
-        <p className="font-medium">Private ledger</p>
+    <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface/60 px-4 py-3 backdrop-blur-sm">
+      <div className="min-w-0">
+        <p className="flex items-center gap-2 text-sm font-medium">
+          <span aria-hidden className="text-ink-mute">🔒</span>
+          Private ledger
+          {identity && (
+            <span className="rounded-full border border-line bg-raised px-2 py-0.5 text-[10px] text-ink-soft">
+              {identity.name}
+            </span>
+          )}
+        </p>
         {!identity ? (
-          <p className="text-xs text-neutral-500">
+          <p className="mt-0.5 text-xs text-ink-mute">
             Connect your Swarm identity to add context to your spending.
           </p>
         ) : canUpload ? (
-          <p className="text-xs text-neutral-500">
+          <p className="mt-0.5 text-xs text-ink-mute">
             Connected as {identity.name}. Notes are encrypted with your key.
             {uploadMode === 'subsidised' ? ' Uploading via subsidised gateway.' : ''}
           </p>
         ) : (
-          <p className="text-xs text-amber-400">
+          <p className="mt-0.5 text-xs text-brand-soft">
             {uploadIssue === 'no-stamp'
               ? 'No postage stamp: you can read, not write.'
               : uploadIssue === 'stamper-failed'
@@ -25,20 +34,17 @@ export function SwarmBar({ ledger }: { ledger: ReturnType<typeof useLedger> }) {
                 : 'Upload not available for this identity.'}
           </p>
         )}
-        {readError && <p className="text-xs text-amber-400">{readError}</p>}
+        {readError && <p className="mt-0.5 text-xs text-brand-soft">{readError}</p>}
       </div>
+
       {identity ? (
-        <button onClick={refresh} className="rounded-lg border border-neutral-700 px-3 py-1 text-xs">
+        <Button size="sm" variant="secondary" onClick={refresh}>
           Reload from Swarm
-        </button>
+        </Button>
       ) : (
-        <button
-          onClick={connect}
-          disabled={connecting}
-          className="rounded-lg border border-emerald-600 px-3 py-1 text-xs text-emerald-400 disabled:opacity-40"
-        >
+        <Button size="sm" onClick={connect} busy={connecting}>
           {connecting ? 'Opening Swarm ID…' : 'Connect Swarm ID'}
-        </button>
+        </Button>
       )}
     </div>
   )

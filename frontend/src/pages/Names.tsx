@@ -142,16 +142,16 @@ export function Names() {
 
   if (!connection.isConnected) {
     return (
-      <div className="mx-auto max-w-md rounded-xl border border-neutral-800 bg-neutral-900 p-6 text-center">
+      <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface/80 p-8 text-center shadow-[0_12px_32px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm">
         <h2 className="text-lg font-semibold">Connect a wallet</h2>
-        <p className="mt-2 text-sm text-neutral-400">
+        <p className="mt-2 text-sm text-ink-soft">
           Names live on Sepolia (ENSv2 beta); goals stay on Avalanche Fuji.
         </p>
         <div className="mt-4 flex flex-col gap-2">
           {connectors.map((connector) => (
             <button
               key={connector.uid}
-              className="rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-neutral-950 shadow-[0_6px_20px_-8px_rgba(245,165,36,0.8)] transition duration-150 ease-soft hover:bg-brand-soft active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
               disabled={connect.isPending}
               onClick={() => connect.mutate({ connector })}
             >
@@ -159,24 +159,24 @@ export function Names() {
             </button>
           ))}
         </div>
-        {connect.error && <p className="mt-3 text-sm text-red-400">{connect.error.message}</p>}
+        {connect.error && <p className="mt-3 text-sm text-bad">{connect.error.message}</p>}
       </div>
     )
   }
 
   return (
     <div className="mx-auto max-w-lg">
-      <h1 className="text-xl font-bold">Names</h1>
-      <p className="mt-1 text-sm text-neutral-400">
+      <h1 className="text-2xl font-bold tracking-tight">Names</h1>
+      <p className="mt-1 text-sm text-ink-soft">
         Your ENSv2 namespace on Sepolia: <code>{FORMICA_ROOT}</code>. Formica deploys the registry and resolver, but
         you are the root: Formica cannot modify your names.
       </p>
 
       {!onSepolia && (
-        <div className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/5 p-3 text-sm">
-          <p className="text-amber-300">Registering names requires the Sepolia network.</p>
+        <div className="mt-4 rounded-xl border border-brand/30 bg-brand/5 p-3.5 text-sm">
+          <p className="text-brand-soft">Registering names requires the Sepolia network.</p>
           <button
-            className="mt-2 rounded-lg border border-amber-500 px-3 py-1.5 text-sm font-medium text-amber-400 disabled:opacity-40"
+            className="mt-2 rounded-lg border border-amber-500 px-3 py-1.5 text-sm font-medium text-brand-soft disabled:opacity-40"
             disabled={switching}
             onClick={() => switchChain({ chainId: SEPOLIA_CHAIN_ID })}
           >
@@ -185,22 +185,22 @@ export function Names() {
         </div>
       )}
 
-      <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+      <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm">
         {myLabel ? (
           <>
             <h2 className="font-semibold">Your namespace</h2>
             <a
-              className="mt-1 block font-mono text-sm text-amber-400 underline decoration-dotted"
+              className="mt-1 block font-mono text-sm text-brand-soft underline decoration-dotted"
               href={`${ENS_EXPLORER}${myLabel}.${FORMICA_ROOT}`}
               target="_blank"
               rel="noreferrer"
             >
               {myLabel}.{FORMICA_ROOT}
             </a>
-            <p className="mt-2 text-xs text-neutral-500">
+            <p className="mt-2 text-xs text-ink-mute">
               you are the root of this namespace: Formica cannot modify it
             </p>
-            <dl className="mt-3 space-y-1 text-xs text-neutral-400">
+            <dl className="mt-3 space-y-1 text-xs text-ink-soft">
               <div className="flex justify-between gap-2">
                 <dt>registry</dt>
                 <dd className="font-mono">
@@ -218,29 +218,29 @@ export function Names() {
         ) : (
           <>
             <h2 className="font-semibold">Claim your namespace</h2>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-1 text-xs text-ink-mute">
               One transaction on Sepolia: your own registry and resolver, forever.
             </p>
             <input
               value={labelInput}
               onChange={(event) => setLabelInput(event.target.value)}
               placeholder="mario"
-              className="mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 font-mono text-xs outline-none focus:border-amber-500"
+              className="mt-3 w-full rounded-xl border border-line bg-canvas/60 px-3.5 py-2.5 font-mono text-xs transition duration-150 ease-soft placeholder:text-ink-mute hover:border-line-strong focus:border-brand focus:outline-none"
             />
             {labelInput.trim() !== '' && !labelValid && (
-              <span className="mt-1 block text-xs text-red-400">
+              <span className="mt-1 block text-xs text-bad">
                 Lowercase letters, numbers and hyphens; no dots, max 32 characters.
               </span>
             )}
             {labelValid && (
-              <span className="mt-1 block text-xs text-neutral-500">
+              <span className="mt-1 block text-xs text-ink-mute">
                 will become {normalizedLabel}.{FORMICA_ROOT}
               </span>
             )}
             <button
               onClick={onClaim}
               disabled={!canClaim}
-              className="mt-3 w-full rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
+              className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-neutral-950 shadow-[0_6px_20px_-8px_rgba(245,165,36,0.8)] transition duration-150 ease-soft hover:bg-brand-soft active:translate-y-px disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             >
               Claim your namespace
             </button>
@@ -250,24 +250,24 @@ export function Names() {
       </div>
 
       {myLabel && ledger.identity && (
-        <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+        <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm">
           <h2 className="font-semibold">Private ledger</h2>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-ink-mute">
             The <code>{LEDGER_RECORD_KEY}</code> record publishes the encrypted Swarm feed reference in the name: the
             ledger becomes discoverable from {myLabel}.{FORMICA_ROOT} without this app. One transaction, then the
             notes stay off-chain.
           </p>
           {ledgerRecord.data ? (
-            <p className="mt-3 break-all font-mono text-xs text-neutral-400">
+            <p className="mt-3 break-all font-mono text-xs text-ink-soft">
               {LEDGER_RECORD_KEY} = {ledgerRecord.data}
             </p>
           ) : (
-            <p className="mt-3 text-xs text-neutral-600">no manifest published in the name</p>
+            <p className="mt-3 text-xs text-ink-mute">no manifest published in the name</p>
           )}
           <button
             onClick={onPublishManifest}
             disabled={!onSepolia || !ledger.canUpload || publishBusy || !userResolver || !userNode}
-            className="mt-3 w-full rounded-lg border border-emerald-600 px-4 py-2 text-sm font-medium text-emerald-400 disabled:opacity-40"
+            className="mt-3 inline-flex w-full items-center justify-center rounded-xl border border-good/40 bg-good/5 px-4 py-2.5 text-sm font-medium text-good transition duration-150 ease-soft hover:bg-good/10 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {publishing
               ? 'Creating manifest…'
@@ -278,25 +278,25 @@ export function Names() {
                   : 'Publish in the name'}
           </button>
           {!ledger.canUpload && (
-            <p className="mt-1 text-xs text-amber-400">A postage stamp is required to create the manifest.</p>
+            <p className="mt-1 text-xs text-brand-soft">A postage stamp is required to create the manifest.</p>
           )}
-          {publishError && <p className="mt-1 text-xs text-red-400">{publishError}</p>}
+          {publishError && <p className="mt-1 text-xs text-bad">{publishError}</p>}
           <TxStatus phase={publish.phase} hash={publish.hash} error={publish.error} />
         </div>
       )}
 
       {myLabel && (
-        <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+        <div className="mt-4 rounded-2xl border border-line bg-surface/80 p-5 shadow-[0_12px_32px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm">
           <h2 className="font-semibold">Goal names</h2>
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="mt-1 text-xs text-ink-mute">
             Each name is two transactions on Sepolia: the registration in your registry and the record pointing to
             the vault on Fuji.
           </p>
-          {goals.isLoading && <p className="mt-3 text-sm text-neutral-400">Loading goals…</p>}
+          {goals.isLoading && <p className="mt-3 text-sm text-ink-soft">Loading goals…</p>}
           {goals.data && goals.data.length === 0 && (
-            <p className="mt-3 text-sm text-neutral-500">You have no goals on Fuji yet.</p>
+            <p className="mt-3 text-sm text-ink-mute">You have no goals on Fuji yet.</p>
           )}
-          <ul className="mt-3 divide-y divide-neutral-800">
+          <ul className="mt-3 divide-y divide-line">
             {vaults.map((vault, index) => {
               const goalLabel = labels[index]
               if (!goalLabel) return null
@@ -319,7 +319,7 @@ export function Names() {
 
       {onSepolia && (
         <button
-          className="mt-6 text-sm text-neutral-400 underline"
+          className="mt-6 text-sm text-ink-mute underline decoration-dotted underline-offset-2 transition hover:text-ink"
           onClick={() => switchChain({ chainId: avalancheFuji.id })}
         >
           Back to Fuji
@@ -437,11 +437,11 @@ function GoalNameRow({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-medium">{goalLabel}</p>
-          <p className="text-xs text-neutral-500">{shortAddress(vault)}</p>
+          <p className="text-xs text-ink-mute">{shortAddress(vault)}</p>
         </div>
         {done ? (
           <a
-            className="font-mono text-xs text-amber-400 underline decoration-dotted"
+            className="font-mono text-xs text-brand-soft underline decoration-dotted"
             href={`${ENS_EXPLORER}${fullName}`}
             target="_blank"
             rel="noreferrer"
@@ -452,7 +452,7 @@ function GoalNameRow({
           <button
             onClick={onRegister}
             disabled={!canAct}
-            className="rounded-lg border border-amber-500 px-3 py-1.5 text-xs font-medium text-amber-400 disabled:opacity-40"
+            className="inline-flex items-center justify-center rounded-xl border border-line-strong bg-raised px-3 py-1.5 text-xs font-medium text-ink transition duration-150 ease-soft hover:border-ink-mute hover:bg-line disabled:cursor-not-allowed disabled:opacity-40"
           >
             Name it
           </button>
@@ -460,7 +460,7 @@ function GoalNameRow({
           <button
             onClick={onSetAddr}
             disabled={!canAct}
-            className="rounded-lg border border-amber-500 px-3 py-1.5 text-xs font-medium text-amber-400 disabled:opacity-40"
+            className="inline-flex items-center justify-center rounded-xl border border-line-strong bg-raised px-3 py-1.5 text-xs font-medium text-ink transition duration-150 ease-soft hover:border-ink-mute hover:bg-line disabled:cursor-not-allowed disabled:opacity-40"
           >
             Link the vault
           </button>

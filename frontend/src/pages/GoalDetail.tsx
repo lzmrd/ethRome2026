@@ -7,6 +7,7 @@ import { FACTORY, SNOWTRACE_ADDRESS, SNOWTRACE_TX } from '../config/addresses'
 import { ENS_EXPLORER, FORMICA_REGISTRAR, FORMICA_ROOT, SEPOLIA_CHAIN_ID, ensRegistrarAbi } from '../config/ens'
 import { ProgressBar } from '../components/ProgressBar'
 import { SwarmBar } from '../components/SwarmBar'
+import { Badge, Button, Card, EmptyState, SectionTitle, Skeleton, TextInput, cx } from '../components/ui'
 import { EntryNote } from '../components/EntryNote'
 import { TxStatus } from '../components/TxStatus'
 import { useAaveApy } from '../hooks/useAaveApy'
@@ -107,26 +108,27 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
 
   if (!valid) {
     return (
-      <div>
-        <p className="text-red-400">Invalid vault address.</p>
-        <button className="mt-2 text-sm underline" onClick={() => navigate('/')}>
-          Back to dashboard
-        </button>
-      </div>
+      <EmptyState
+        title="Invalid vault address."
+        action={<Button variant="secondary" onClick={() => navigate('/')}>Back to dashboard</Button>}
+      />
     )
   }
 
   return (
     <div>
-      <button className="text-sm text-neutral-400 hover:text-white" onClick={() => navigate('/')}>
+      <button
+        className="text-sm text-ink-mute transition hover:text-ink"
+        onClick={() => navigate('/')}
+      >
         ← Dashboard
       </button>
 
-      <div className="mt-4 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold">{meta.label ?? shortAddress(address)}</h1>
+      <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-bold tracking-tight">{meta.label ?? shortAddress(address)}</h1>
           <a
-            className="text-xs text-neutral-500 underline decoration-dotted"
+            className="tnum mt-1 block truncate text-xs text-ink-mute underline decoration-dotted underline-offset-2 hover:text-ink-soft"
             href={`${SNOWTRACE_ADDRESS}${address}`}
             target="_blank"
             rel="noreferrer"
@@ -135,7 +137,7 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
           </a>
           {verifiedName && (
             <a
-              className="mt-1 block font-mono text-xs text-amber-400 underline decoration-dotted"
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-2.5 py-0.5 font-mono text-xs text-brand-soft transition hover:bg-brand/20"
               href={`${ENS_EXPLORER}${verifiedName}`}
               target="_blank"
               rel="noreferrer"
@@ -144,113 +146,145 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
             </a>
           )}
         </div>
-        <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300">
-          {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '-'}
-        </span>
+        <Badge tone={meta.mode === 1 ? 'brand' : 'neutral'}>
+          {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '–'}
+        </Badge>
       </div>
 
       {isVault.data === false && (
-        <p className="mt-2 text-xs text-red-400">Warning: not a vault registered in the factory.</p>
+        <p className="mt-3 rounded-xl border border-bad/30 bg-bad/5 px-3 py-2 text-xs text-bad">
+          Warning: not a vault registered in the factory.
+        </p>
       )}
 
-      <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-        <div className="flex items-end justify-between">
+      <Card className="mt-6">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs text-neutral-500">Balance</p>
-            <p className="text-3xl font-bold">{balance === undefined ? '…' : formatUsdc(balance)} USDC</p>
+            <p className="text-xs tracking-wide text-ink-mute uppercase">Balance</p>
+            <p className="tnum mt-1 text-4xl font-bold tracking-tight">
+              {balance === undefined ? (
+                <Skeleton className="h-9 w-40" />
+              ) : (
+                <>
+                  {formatUsdc(balance)} <span className="text-lg font-medium text-ink-mute">USDC</span>
+                </>
+              )}
+            </p>
           </div>
-          <div className="text-right text-xs text-neutral-400">
+          <div className="tnum space-y-0.5 text-right text-xs text-ink-soft">
             <p>yield {earned === undefined ? '…' : `+${formatUsdc(earned, 4)} USDC`}</p>
-            <p>net deposited {meta.netDeposited === undefined ? '…' : `${formatUsdc(meta.netDeposited)} USDC`}</p>
+            <p>
+              net deposited{' '}
+              {meta.netDeposited === undefined ? '…' : `${formatUsdc(meta.netDeposited)} USDC`}
+            </p>
             {meta.mode === 1 && apy !== undefined && <p>Aave APY {apy.toFixed(2)}%</p>}
           </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-5">
           <ProgressBar value={progress} />
-          <p className="mt-1 text-xs text-neutral-500">
+          <p className="tnum mt-1.5 text-xs text-ink-mute">
             {meta.target !== undefined && meta.target > 0n
               ? `target ${formatUsdc(meta.target)} USDC`
               : 'no target set'}
           </p>
         </div>
-      </div>
+      </Card>
 
       {isOwner ? (
-        <div className="mt-6 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="font-semibold">Withdraw</h2>
-          <div className="mt-2 flex gap-2">
-            <input
+        <Card className="mt-4">
+          <SectionTitle>Withdraw</SectionTitle>
+          <div className="flex gap-2">
+            <TextInput
               value={amountInput}
               onChange={(event) => setAmountInput(event.target.value)}
               placeholder="0.00"
               inputMode="decimal"
-              className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-3 py-2 outline-none focus:border-amber-500"
+              className="flex-1 tnum"
             />
-            <button
-              className="rounded-lg border border-neutral-700 px-3 py-2 text-sm"
+            <Button
+              variant="secondary"
               onClick={() => balance !== undefined && setAmountInput(formatUsdc(balance, 6))}
             >
               Max
-            </button>
+            </Button>
           </div>
-          {overBalance === true && <p className="mt-1 text-xs text-red-400">Amount above the goal balance.</p>}
+          {overBalance === true && <p className="mt-1.5 text-xs text-bad">Amount above the goal balance.</p>}
           <div className="mt-3 flex gap-2">
-            <button
+            <Button
+              full
               onClick={onWithdraw}
               disabled={!canWithdraw}
-              className="flex-1 rounded-lg bg-amber-500 px-4 py-2 font-medium text-neutral-950 disabled:opacity-40"
+              busy={['simulating', 'signing', 'mining'].includes(withdrawing.phase)}
             >
               Withdraw amount
-            </button>
-            <button
-              onClick={onWithdrawMax}
-              disabled={!canWithdrawMax}
-              className="flex-1 rounded-lg border border-amber-500 px-4 py-2 font-medium text-amber-400 disabled:opacity-40"
-            >
+            </Button>
+            <Button variant="secondary" full onClick={onWithdrawMax} disabled={!canWithdrawMax}>
               Withdraw all
-            </button>
+            </Button>
           </div>
           <TxStatus phase={withdrawing.phase} hash={withdrawing.hash} error={withdrawing.error} />
-        </div>
+        </Card>
       ) : (
-        <p className="mt-6 text-xs text-neutral-500">Only the owner ({meta.owner ? shortAddress(meta.owner) : '…'}) can withdraw.</p>
+        <p className="mt-4 text-xs text-ink-mute">
+          Only the owner ({meta.owner ? shortAddress(meta.owner) : '…'}) can withdraw.
+        </p>
       )}
 
       <SwarmBar ledger={ledger} />
 
-      <div className="mt-6">
-        <h2 className="font-semibold">History</h2>
-        {events.isLoading && <p className="mt-2 text-sm text-neutral-400">Loading events…</p>}
+      <section className="mt-6">
+        <SectionTitle
+          hint={`Last update ${formatDate(events.dataUpdatedAt ? BigInt(Math.floor(events.dataUpdatedAt / 1000)) : undefined)}`}
+        >
+          History
+        </SectionTitle>
+
+        {events.isLoading && <Skeleton className="h-20 w-full rounded-2xl" />}
+
         {events.data && events.data.length === 0 && (
-          <p className="mt-2 text-sm text-neutral-500">No movements yet.</p>
+          <EmptyState title="No movements yet.">
+            Spend or receive with this goal selected and the round-up shows up here.
+          </EmptyState>
         )}
-        <ul className="mt-2 divide-y divide-neutral-800 rounded-xl border border-neutral-800 bg-neutral-900">
-          {(events.data ?? []).map((event) => (
-            <li key={`${event.transactionHash}-${event.kind}-${event.blockNumber}`} className="flex flex-col gap-1 px-4 py-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className={event.kind === 'Deposit' ? 'text-emerald-400' : 'text-neutral-300'}>
-                  {event.kind === 'Deposit' ? 'Deposit' : 'Withdrawal'} {formatUsdc(event.assets)} USDC
-                </span>
-                <span className="flex items-center gap-3 text-xs text-neutral-500">
-                  <span>block {event.blockNumber.toString()}</span>
-                  <a
-                    className="underline decoration-dotted"
-                    href={`${SNOWTRACE_TX}${event.transactionHash}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    tx
-                  </a>
-                </span>
-              </div>
-              {vault && <EntryNote tx={event.transactionHash} vault={vault} ledger={ledger} />}
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-xs text-neutral-600">
-          Last update {formatDate(events.dataUpdatedAt ? BigInt(Math.floor(events.dataUpdatedAt / 1000)) : undefined)}
-        </p>
-      </div>
+
+        {(events.data ?? []).length > 0 && (
+          <ul className="divide-y divide-line overflow-hidden rounded-2xl border border-line bg-surface/80">
+            {(events.data ?? []).map((event) => (
+              <li
+                key={`${event.transactionHash}-${event.kind}-${event.blockNumber}`}
+                className="flex flex-col gap-1 px-4 py-3 transition duration-150 ease-soft hover:bg-raised/60"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <span className="flex items-center gap-2 text-sm">
+                    <span
+                      aria-hidden
+                      className={cx(
+                        'size-1.5 rounded-full',
+                        event.kind === 'Deposit' ? 'bg-good' : 'bg-ink-mute',
+                      )}
+                    />
+                    <span className={cx('tnum', event.kind === 'Deposit' ? 'text-good' : 'text-ink-soft')}>
+                      {event.kind === 'Deposit' ? 'Deposit' : 'Withdrawal'} {formatUsdc(event.assets)} USDC
+                    </span>
+                  </span>
+                  <span className="tnum flex shrink-0 items-center gap-3 text-xs text-ink-mute">
+                    <span>block {event.blockNumber.toString()}</span>
+                    <a
+                      className="underline decoration-dotted underline-offset-2 hover:text-ink-soft"
+                      href={`${SNOWTRACE_TX}${event.transactionHash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      tx
+                    </a>
+                  </span>
+                </div>
+                {vault && <EntryNote tx={event.transactionHash} vault={vault} ledger={ledger} />}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }
