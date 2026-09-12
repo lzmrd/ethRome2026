@@ -189,35 +189,3 @@ export function EmptyState({
     </div>
   )
 }
-
-/** Riga etichetta/valore dei riepiloghi: valori sempre incolonnati a destra. */
-export function Row({
-  label,
-  value,
-  strong = false,
-  tone,
-}: {
-  label: ReactNode
-  value: ReactNode
-  strong?: boolean
-  tone?: 'brand' | 'good'
-}) {
-  return (
-    <div
-      className={cx(
-        'flex items-center justify-between gap-4 py-1.5',
-        strong && 'border-t border-line pt-2.5 font-semibold',
-      )}
-    >
-      <span className="text-sm text-ink-soft">{label}</span>
-      <span
-        className={cx(
-          'tnum text-sm',
-          tone === 'brand' ? 'text-brand-soft' : tone === 'good' ? 'text-good' : 'text-ink',
-        )}
-      >
-        {value}
-      </span>
-    </div>
-  )
-}

@@ -18,12 +18,12 @@ export function Header({ current, navigate }: { current: Route['name']; navigate
 
   return (
     <header className="sticky top-0 z-20 border-b border-line/80 bg-canvas/70 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
+      <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3.5">
         <button
           onClick={() => navigate('/')}
-          className="group flex items-center gap-2 text-base font-semibold tracking-tight"
+          className="group flex shrink-0 items-center gap-2.5 text-xl font-semibold tracking-tight"
         >
-          <Logo size={26} className="transition duration-300 ease-soft group-hover:rotate-6" />
+          <Logo size={36} className="transition duration-300 ease-soft group-hover:rotate-6" />
           Formica
         </button>
 

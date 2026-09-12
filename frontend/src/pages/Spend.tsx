@@ -5,10 +5,11 @@ import { useQueryClient } from '@tanstack/react-query'
 import { erc20Abi, routerAbi } from '../config/abis'
 import { ROUTER, USDC } from '../config/addresses'
 import { TxStatus } from '../components/TxStatus'
-import { AmountInput, Button, Card, Field, Row, TextInput } from '../components/ui'
+import { PaymentFlow } from '../components/PaymentFlow'
+import { AmountInput, Button, Card, Field, TextInput } from '../components/ui'
 import { useUserGoals, useVaultLabels, useGoalMeta } from '../hooks/useGoals'
 import { useRoundUpQuote, useRouterAllowance, useUsdcBalance } from '../hooks/useUsdc'
-import { formatUsdc, parseUsdc } from '../lib/format'
+import { formatUsdc, parseUsdc, shortAddress } from '../lib/format'
 import { useTx } from '../lib/tx'
 
 export function Spend() {
@@ -46,6 +47,14 @@ export function Spend() {
   const needsApproval =
     total !== undefined && allowance.data !== undefined ? allowance.data < total : undefined
   const insufficient = total !== undefined && balance.data !== undefined ? balance.data < total : undefined
+
+  const goalSummary =
+    [
+      meta.multiplier !== undefined ? `x${meta.multiplier}` : undefined,
+      meta.mode === undefined ? undefined : meta.mode === 1 ? 'Yield on Aave' : 'Liquid',
+    ]
+      .filter(Boolean)
+      .join(' · ') || undefined
 
   const approval = useTx()
   const payment = useTx()
@@ -140,17 +149,29 @@ export function Spend() {
           </Field>
         </div>
 
-        <div className="rounded-xl border border-line bg-canvas/40 px-4 py-3">
-          {amount === undefined || saving === undefined || total === undefined ? (
-            <p className="py-1.5 text-sm text-ink-mute">Enter an amount to see the preview.</p>
-          ) : (
-            <>
-              <Row label="Merchant" value={`${formatUsdc(amount)} USDC`} />
-              <Row label="Saved into the goal" value={`+${formatUsdc(saving)} USDC`} tone="brand" />
-              <Row label="Total charge" value={`${formatUsdc(total)} USDC`} strong />
-            </>
-          )}
-        </div>
+        <PaymentFlow
+          steps={needsApproval === true ? 'approval, then one transaction' : 'one transaction on Fuji'}
+          source={{
+            title: 'You pay',
+            sub: owner ? shortAddress(owner) : 'not connected',
+            amount: total !== undefined ? `${formatUsdc(total)} USDC` : undefined,
+          }}
+          legs={[
+            {
+              title: 'Merchant',
+              sub: merchant ? shortAddress(merchant) : 'address not set',
+              amount: amount !== undefined ? `${formatUsdc(amount)} USDC` : undefined,
+            },
+            {
+              title: meta.label ?? 'Your goal',
+              sub: goalSummary,
+              amount: saving !== undefined ? `+${formatUsdc(saving)} USDC` : undefined,
+              tone: 'brand',
+              faded: saving === 0n,
+            },
+          ]}
+          footnote="One call to payWithRoundUp: the merchant is paid and the round-up is deposited into the goal in the same transaction. The router keeps nothing."
+        />
 
         <div className="flex items-center justify-between text-xs text-ink-mute">
           <span className="tnum">
