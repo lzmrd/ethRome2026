@@ -13,8 +13,8 @@ Gli indirizzi dei contratti ENSv2 di Formica sono in [`contracts/deployments/sep
 | 5 | Scrivi il record `addr(coinType 2147526761)` verso il vault Fuji | record di 20 byte sul resolver dell'utente | ✅ 63.016 gas | [`0x8baa8dde…957be1`](https://sepolia.etherscan.io/tx/0x8baa8ddef4f8f4e9d9cca85b5b378094a2acec95818d26cb08ad09e3b7957be1) |
 | 6 | Risolvi `vacanza-indonesia.mario.formica.eth` dal terminale (Universal Resolver Sepolia) | indirizzo del vault su Fuji | ✅ `0x099c2bc126e748241a77e186b342f8aba1a642f5` | — |
 | 7 | Incassa scrivendo il nome nella pagina Incassa | risoluzione mostrata, poi `receiveWithRoundDown` sul vault | ⚠️ parziale: il nome ha risolto e la tx è passata, ma con importo tondo 3,00 e pagante = destinatario, quindi risparmio 0 e saldi invariati. Da rifare dal wallet merchant con 4,30 | [`0x2e266d1c…f8c9b`](https://testnet.snowtrace.io/tx/0x2e266d1ccdb74da6fa43e951bff979d7ba1d63dade37a48eadd30b3c411f8c9b) |
-| 8 | Nome inesistente nella pagina Incassa | errore "Questo nome non ha un indirizzo su Fuji", nessuna tx | ✅ osservato a schermo, nessuna tx inviata | — |
-| 9 | Indirizzo che non è un vault | errore "Non è un goal Formica" (`factory.isVault` = false) | ✅ osservato a schermo con l'indirizzo del merchant | — |
+| 8 | Nome inesistente nella pagina Incassa | errore "This name has no address on Fuji", nessuna tx | ✅ osservato a schermo, nessuna tx inviata | — |
+| 9 | Indirizzo che non è un vault | errore "Not a Formica goal" (`factory.isVault` = false) | ✅ osservato a schermo con l'indirizzo del merchant | — |
 | 10 | Dettaglio goal: il nome compare solo se risolve davvero a quel vault | link all'ENS Explorer | ⬜ da cliccare a mano (la risoluzione a `0x099c…` è verificata al passo 6) | — |
 
 **Come sono state fatte le transazioni 1, 4 e 5:** da script e `cast`, non cliccando la pagina Nomi. La prima prova a mano della pagina ha trovato un difetto — la registrazione veniva inviata al resolver invece che al registry dell'utente — corretto il 2026-09-12; la chiamata corretta è stata simulata con successo sul registry `0xfBF53d0b…F0000D`. I passi 3, 7, 8, 9 e 10 restano da cliccare.
