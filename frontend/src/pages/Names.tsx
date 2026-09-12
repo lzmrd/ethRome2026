@@ -92,10 +92,11 @@ export function Names() {
     try {
       // Il feed è firmato dal signer derivato, non dall'app signer: il manifest
       // deve dichiararne l'owner (40 hex senza 0x, come valida il proxy),
-      // altrimenti pubblicherebbe un feed vuoto.
+      // altrimenti pubblicherebbe un feed vuoto. Il manifest resta in chiaro
+      // perché il gateway possa seguire il feed: è il payload a essere cifrato.
       const manifestRef = await ledger.client.createFeedManifest(
         LEDGER_TOPIC,
-        { owner: ledger.keys.owner.slice(2) },
+        { owner: ledger.keys.owner.slice(2), uploadOptions: { encrypt: false } },
         { timeout: 120_000 },
       )
       await publish.run({
