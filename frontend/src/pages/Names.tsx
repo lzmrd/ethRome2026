@@ -219,6 +219,7 @@ export function Names() {
                   goalLabel={goalLabel}
                   userLabel={myLabel}
                   account={account as Address}
+                  registry={subregistry.data && subregistry.data !== zeroAddress ? subregistry.data : undefined}
                   resolver={resolver.data && resolver.data !== zeroAddress ? resolver.data : undefined}
                   onSepolia={onSepolia}
                 />
@@ -245,6 +246,7 @@ function GoalNameRow({
   goalLabel,
   userLabel,
   account,
+  registry,
   resolver,
   onSepolia,
 }: {
@@ -252,6 +254,8 @@ function GoalNameRow({
   goalLabel: string
   userLabel: string
   account: Address
+  /** Registry ENSv2 dell'utente: e' qui che vivono i nomi dei goal, non in quello di formica.eth. */
+  registry?: Address
   resolver?: Address
   onSepolia: boolean
 }) {
@@ -259,11 +263,12 @@ function GoalNameRow({
   const node = namehash(fullName)
 
   const goalResolver = useReadContract({
-    address: FORMICA_REGISTRY,
+    address: registry,
     abi: ensRegistryAbi,
     functionName: 'getResolver',
     args: [goalLabel],
     chainId: SEPOLIA_CHAIN_ID,
+    query: { enabled: Boolean(registry) },
   })
   const ownedResolver =
     goalResolver.data && goalResolver.data !== zeroAddress ? goalResolver.data : resolver
@@ -307,14 +312,14 @@ function GoalNameRow({
   const busy =
     ['simulating', 'signing', 'mining'].includes(registerTx.phase) ||
     ['simulating', 'signing', 'mining'].includes(addrTx.phase)
-  const canAct = Boolean(account && ownedResolver) && onSepolia && !busy
+  const canAct = Boolean(account && registry && ownedResolver) && onSepolia && !busy
   const done = (registered && pointsToVault) || justRegistered
 
   async function onRegister() {
-    if (!ownedResolver) return
+    if (!registry || !ownedResolver) return
     await registerTx.run({
       account,
-      address: ownedResolver,
+      address: registry,
       abi: ensRegistryAbi,
       functionName: 'register',
       args: [
