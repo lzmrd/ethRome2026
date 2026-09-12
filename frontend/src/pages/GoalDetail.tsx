@@ -6,10 +6,13 @@ import { factoryAbi, vaultAbi } from '../config/abis'
 import { FACTORY, SNOWTRACE_ADDRESS, SNOWTRACE_TX } from '../config/addresses'
 import { ENS_EXPLORER, FORMICA_REGISTRAR, FORMICA_ROOT, SEPOLIA_CHAIN_ID, ensRegistrarAbi } from '../config/ens'
 import { ProgressBar } from '../components/ProgressBar'
+import { SwarmBar } from '../components/SwarmBar'
+import { EntryNote } from '../components/EntryNote'
 import { TxStatus } from '../components/TxStatus'
 import { useAaveApy } from '../hooks/useAaveApy'
 import { useGoalTarget } from '../hooks/useEnsGoal'
 import { useGoalBalance, useGoalMeta } from '../hooks/useGoals'
+import { useLedger } from '../hooks/useLedger'
 import { useVaultEvents } from '../hooks/useVaultEvents'
 import { formatDate, formatUsdc, parseUsdc, shortAddress } from '../lib/format'
 import { useTx } from '../lib/tx'
@@ -32,6 +35,7 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
   const meta = useGoalMeta(vault)
   const { balance, shares } = useGoalBalance(vault, meta.owner)
   const events = useVaultEvents(vault ?? zeroAddress)
+  const ledger = useLedger()
 
   const connected = connection.address
   const isOwner = Boolean(meta.owner && connected && meta.owner.toLowerCase() === connected.toLowerCase())
@@ -212,6 +216,8 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
         <p className="mt-6 text-xs text-neutral-500">Solo il proprietario ({meta.owner ? shortAddress(meta.owner) : '…'}) può prelevare.</p>
       )}
 
+      <SwarmBar ledger={ledger} />
+
       <div className="mt-6">
         <h2 className="font-semibold">Storico</h2>
         {events.isLoading && <p className="mt-2 text-sm text-neutral-400">Lettura eventi…</p>}
@@ -220,21 +226,24 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
         )}
         <ul className="mt-2 divide-y divide-neutral-800 rounded-xl border border-neutral-800 bg-neutral-900">
           {(events.data ?? []).map((event) => (
-            <li key={`${event.transactionHash}-${event.kind}-${event.blockNumber}`} className="flex items-center justify-between px-4 py-2 text-sm">
-              <span className={event.kind === 'Deposit' ? 'text-emerald-400' : 'text-neutral-300'}>
-                {event.kind === 'Deposit' ? 'Deposito' : 'Prelievo'} {formatUsdc(event.assets)} USDC
-              </span>
-              <span className="flex items-center gap-3 text-xs text-neutral-500">
-                <span>blocco {event.blockNumber.toString()}</span>
-                <a
-                  className="underline decoration-dotted"
-                  href={`${SNOWTRACE_TX}${event.transactionHash}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  tx
-                </a>
-              </span>
+            <li key={`${event.transactionHash}-${event.kind}-${event.blockNumber}`} className="flex flex-col gap-1 px-4 py-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className={event.kind === 'Deposit' ? 'text-emerald-400' : 'text-neutral-300'}>
+                  {event.kind === 'Deposit' ? 'Deposito' : 'Prelievo'} {formatUsdc(event.assets)} USDC
+                </span>
+                <span className="flex items-center gap-3 text-xs text-neutral-500">
+                  <span>blocco {event.blockNumber.toString()}</span>
+                  <a
+                    className="underline decoration-dotted"
+                    href={`${SNOWTRACE_TX}${event.transactionHash}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    tx
+                  </a>
+                </span>
+              </div>
+              {vault && <EntryNote tx={event.transactionHash} vault={vault} ledger={ledger} />}
             </li>
           ))}
         </ul>
