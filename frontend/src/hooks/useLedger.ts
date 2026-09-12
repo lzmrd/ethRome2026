@@ -41,10 +41,10 @@ export function useLedger() {
       if (!swarm.canUpload) throw new Error('Manca il francobollo postale: non posso scrivere su Swarm')
       const next = upsertEntry(query.data ?? EMPTY_LEDGER, entry)
       const writer = swarm.client.makeSequentialFeedWriter({ topic: LEDGER_TOPIC, signer: swarm.keys.signer })
-      await writer.uploadRawPayload(encodeLedger(next), { encryptionKey: swarm.keys.encryptionKey })
-      return next
+      const result = await writer.uploadRawPayload(encodeLedger(next), { encryptionKey: swarm.keys.encryptionKey })
+      return { ledger: next, reference: result.reference, feedIndex: result.feedIndex }
     },
-    onSuccess: (next) => queryClient.setQueryData(['swarm-ledger', owner], next),
+    onSuccess: ({ ledger }) => queryClient.setQueryData(['swarm-ledger', owner], ledger),
   })
 
   return {
