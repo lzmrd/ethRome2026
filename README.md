@@ -8,7 +8,8 @@ Work in progress. Payments are simulated with testnet USDC; no real funds. Aave 
 
 **Status**
 - **Live on Fuji:** factory, router, owner-only ERC-4626 goal vaults (only the owner can receive deposits into their goal), LIQUID/YIELD mode backed by the real Aave V3 pool. Smoke test passed: [createGoal](https://testnet.snowtrace.io/tx/0xbd00a211a70a47c6f1a0ad5810849ec33a4b854ccb62774e3f99751767fbf2f6), [payWithRoundUp](https://testnet.snowtrace.io/tx/0x4ff0df5291c96373830bc2488defebc3644f5b232b2f996126d3f75d80b31666).
-- **In progress:** ENSv2 goal names (M2). Web app M1: dashboard, crea goal, checkout, incasso, withdraw su Fuji.
+- **Live on Sepolia (ENSv2 beta):** goal names. `FormicaRegistrar` [`0xe31c0b4A…799E5f3`](https://sepolia.etherscan.io/address/0xe31c0b4AF6F1c8F8b7279e6AfdD6bD178799E5f3) holds a delegated role on `formica.eth`: one transaction gives a user `<user>.formica.eth` with their own registry and resolver, of which they are root. A goal name `<goal>.<user>.formica.eth` resolves to the `GoalVault` on Fuji — verified end to end: `vacanza-indonesia.mario.formica.eth` → `0x099c2Bc126E748241a77E186b342F8ABA1A642f5`. ENS may reset names on the Sepolia beta at every redeploy; `contracts/script/SetupEns.s.sol` is idempotent.
+- **Web app:** M1 — dashboard, crea goal, checkout, incasso, withdraw su Fuji. M2 — pagina Nomi (claim del namespace, nome per ogni goal) e incasso scrivendo un nome.
 
 ## Contracts (Avalanche Fuji, chain 43113)
 
@@ -28,7 +29,7 @@ cp .env.example .env.local   # opzionale: VITE_DEMO_MERCHANT=0x… per il checko
 pnpm dev
 ```
 
-Funzioni M1 (tutte su Fuji, tx reali): dashboard dei goal, creazione goal, checkout con round-up, incasso con round-down, dettaglio con withdraw e storico. Nomi ENSv2 in arrivo (M2). Verifica E2E: checklist in [`docs/e2e-m1.md`](docs/e2e-m1.md), esito da compilare.
+Funzioni M1 (tutte su Fuji, tx reali): dashboard dei goal, creazione goal, checkout con round-up, incasso con round-down, dettaglio con withdraw e storico. M2: dalla pagina Nomi si reclama il proprio namespace ENSv2 su Sepolia e si dà un nome a ogni goal; nella pagina Incassa si può scrivere il nome al posto dell'indirizzo. Verifiche E2E: [`docs/e2e-m1.md`](docs/e2e-m1.md) e [`docs/e2e-m2.md`](docs/e2e-m2.md).
 
 ## Develop
 

@@ -43,6 +43,16 @@ Transazioni di setup:
 
 Verifica: il subregistry di `formica.eth` è impostato: i nomi risolvono. `FormicaRegistrar` detiene `ROLE_REGISTRAR | ROLE_RENEW` sul root del registry; il wallet è root con `ALL_ROLES`.
 
+Nomi creati nella prova E2E del 2026-09-12:
+
+| Nome | Cosa | Tx |
+|---|---|---|
+| `mario.formica.eth` | claim del namespace (registry utente `0xfBF53d0b…F0000D`, resolver `0x9fC28e21…FbCf3d`) | [`0x0c3813a8…9025d5`](https://sepolia.etherscan.io/tx/0x0c3813a8ecd2248c2092f3a3a3b02f178b8a8a3d8ef277f53e035774019025d5) |
+| `vacanza-indonesia.mario.formica.eth` | registrazione nel registry utente | [`0x51baa822…9db750`](https://sepolia.etherscan.io/tx/0x51baa822b08c21b52df248590cceefa2beb4b719f66627607986e92d259db750) |
+| `vacanza-indonesia.mario.formica.eth` | record `addr(2147526761)` | [`0x8baa8dde…957be1`](https://sepolia.etherscan.io/tx/0x8baa8ddef4f8f4e9d9cca85b5b378094a2acec95818d26cb08ad09e3b7957be1) |
+
+`vacanza-indonesia.mario.formica.eth` risolve, via Universal Resolver, a `0x099c2Bc126E748241a77E186b342F8ABA1A642f5` — il `GoalVault` su Avalanche Fuji.
+
 ## ENSv2 beta contracts used (Sepolia)
 
 Verified to have code at these addresses on 2026-09-12; source: [ENS deployments](https://docs.ens.domains/learn/deployments).
