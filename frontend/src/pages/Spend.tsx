@@ -7,6 +7,7 @@ import { ROUTER, USDC } from '../config/addresses'
 import { TxStatus } from '../components/TxStatus'
 import { PaymentFlow } from '../components/PaymentFlow'
 import { AmountInput, Button, Card, Field, TextInput } from '../components/ui'
+import { useArchivedGoals } from '../hooks/useArchivedGoals'
 import { useUserGoals, useVaultLabels, useGoalMeta } from '../hooks/useGoals'
 import { useRoundUpQuote, useRouterAllowance, useUsdcBalance } from '../hooks/useUsdc'
 import { formatUsdc, parseUsdc, shortAddress } from '../lib/format'
@@ -18,7 +19,9 @@ export function Spend() {
   const queryClient = useQueryClient()
 
   const goals = useUserGoals(owner)
-  const vaults = goals.data ?? []
+  const archive = useArchivedGoals()
+  // Un goal archiviato e' fuori dalla vista anche qui: comparirebbe solo nella tendina.
+  const vaults = archive.partition(goals.data ?? []).visible
   const { labels } = useVaultLabels(vaults)
 
   const [selected, setSelected] = useState<Address>()

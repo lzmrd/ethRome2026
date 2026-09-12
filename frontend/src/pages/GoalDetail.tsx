@@ -11,6 +11,7 @@ import { Badge, Button, Card, EmptyState, SectionTitle, Skeleton, TextInput, cx 
 import { EntryNote } from '../components/EntryNote'
 import { TxStatus } from '../components/TxStatus'
 import { useAaveApy } from '../hooks/useAaveApy'
+import { useArchivedGoals } from '../hooks/useArchivedGoals'
 import { useGoalTarget } from '../hooks/useEnsGoal'
 import { useGoalBalance, useGoalMeta } from '../hooks/useGoals'
 import { useLedger } from '../hooks/useLedger'
@@ -40,6 +41,7 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
 
   const connected = connection.address
   const isOwner = Boolean(meta.owner && connected && meta.owner.toLowerCase() === connected.toLowerCase())
+  const archive = useArchivedGoals()
 
   const ensLabel = useReadContract({
     address: FORMICA_REGISTRAR,
@@ -146,10 +148,27 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
             </a>
           )}
         </div>
-        <Badge tone={meta.mode === 1 ? 'brand' : 'neutral'}>
-          {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '–'}
-        </Badge>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Badge tone={meta.mode === 1 ? 'brand' : 'neutral'}>
+            {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '–'}
+          </Badge>
+          {isOwner && (
+            <button
+              onClick={() => archive.toggle(address)}
+              title="Archiving only hides the goal in this browser. The vault stays yours on chain."
+              className="text-xs text-ink-mute underline decoration-dotted underline-offset-4 transition hover:text-ink-soft"
+            >
+              {archive.isArchived(address) ? 'unarchive' : 'archive'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {isOwner && archive.isArchived(address) && (
+        <p className="mt-3 rounded-xl border border-line bg-raised/60 px-3 py-2 text-xs text-ink-soft">
+          Archived: hidden from your dashboard in this browser. The vault is untouched on chain.
+        </p>
+      )}
 
       {isVault.data === false && (
         <p className="mt-3 rounded-xl border border-bad/30 bg-bad/5 px-3 py-2 text-xs text-bad">

@@ -50,8 +50,11 @@ Nomi creati nella prova E2E del 2026-09-12:
 | `mario.formica.eth` | claim del namespace (registry utente `0xfBF53d0b…F0000D`, resolver `0x9fC28e21…FbCf3d`) | [`0x0c3813a8…9025d5`](https://sepolia.etherscan.io/tx/0x0c3813a8ecd2248c2092f3a3a3b02f178b8a8a3d8ef277f53e035774019025d5) |
 | `vacanza-indonesia.mario.formica.eth` | registrazione nel registry utente | [`0x51baa822…9db750`](https://sepolia.etherscan.io/tx/0x51baa822b08c21b52df248590cceefa2beb4b719f66627607986e92d259db750) |
 | `vacanza-indonesia.mario.formica.eth` | record `addr(2147526761)` | [`0x8baa8dde…957be1`](https://sepolia.etherscan.io/tx/0x8baa8ddef4f8f4e9d9cca85b5b378094a2acec95818d26cb08ad09e3b7957be1) |
+| `summer-holiday.mario.formica.eth` | registrazione nel registry utente | [`0x4c314155…a8e575`](https://sepolia.etherscan.io/tx/0x4c31415555af5d671b6cf53cd52f2d3018cfb9827ac18642f93ae2fb74a8e575) |
+| `summer-holiday.mario.formica.eth` | record `addr(2147526761)` | [`0xffe47b68…d7de97`](https://sepolia.etherscan.io/tx/0xffe47b683fe17fdd232d4f82c8461a00c200bf030fca61f17a337988bdd7de97) |
 
-`vacanza-indonesia.mario.formica.eth` risolve, via Universal Resolver, a `0x099c2Bc126E748241a77E186b342F8ABA1A642f5` — il `GoalVault` su Avalanche Fuji.
+Entrambi risolvono via Universal Resolver al rispettivo `GoalVault` su Avalanche Fuji:
+`vacanza-indonesia…` → `0x099c2Bc126E748241a77E186b342F8ABA1A642f5`, `summer-holiday…` → `0x1618094A5fC624061a1112ef3ec262fdCBB73CAc` (quello della demo, creato il 2026-09-12).
 
 ## ENSv2 beta contracts used (Sepolia)
 

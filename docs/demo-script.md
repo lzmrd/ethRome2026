@@ -4,17 +4,20 @@ Il video deve aprirsi **senza login**. Parlato in inglese, come la UI. I numeri 
 
 ## ⚠️ Il claim si può fare una volta sola
 
-`claim()` rifiuta il secondo tentativo dello stesso indirizzo con `AlreadyClaimed()`. Il wallet merchant ha **un solo colpo**: prova pure tutto il resto quante volte vuoi, ma **quel pulsante premilo solo nella ripresa buona**. Se lo bruci in una prova, serve un terzo indirizzo con ETH su Sepolia.
+`claim()` rifiuta il secondo tentativo dello stesso indirizzo con `AlreadyClaimed()`. Il wallet merchant ha **un solo colpo**: prova pure tutto il resto quante volte vuoi, ma **quel pulsante premilo solo nella ripresa buona**.
+
+Se lo bruci in una prova, la riserva è pronta: `0x1243deE45cb80E677907c3CE384D748a222258f7`, chiave in `contracts/.env` come `DEMO_PRIVATE_KEY`. È **vuoto**: prima di usarlo mandagli ~0,001 ETH su Sepolia dal saver e importalo in MetaMask.
 
 ## Prima di premere REC
 
 - [ ] Dev server **solo** su `http://localhost:5173`. Se la 5174 è ancora accesa, spegnila: il libretto Swarm è legato all'origine e dalla 5174 risulterebbe vuoto.
 - [ ] Browser A: app sulla Dashboard, wallet **saver** `0x6567…CB5f`, rete **Fuji**, identità Swarm `0xfede` connessa.
-- [ ] Browser B: stessa app su `localhost:5173`, **già connesso** alla stessa identità Swarm, fermo sul dettaglio di `vacanza-indonesia`. Serve solo da ricaricare in diretta.
+- [ ] Browser B: stessa app su `localhost:5173`, **già connesso** alla stessa identità Swarm, fermo sul dettaglio di `summer-holiday`. Serve solo da ricaricare in diretta.
 - [ ] Terminale con il `curl` del minuto 2:15 già digitato, **non eseguito**.
 - [ ] MetaMask con entrambi gli account e **approvazione USDC già data** al router, altrimenti ogni pagamento chiede due firme.
 - [ ] Nessun `.env`, nessuna chiave, nessun terminale con segreti a schermo.
-- [ ] Saldi di partenza: saver 14,6 USDC su Fuji e 0,0035 ETH su Sepolia · merchant 2,9 USDC su Fuji e **0,003 ETH su Sepolia** · goal `vacanza-indonesia` 2,8 USDC su 20 di target.
+- [ ] **Archivia i goal vecchi** dal browser del saver: apri `smoke` (×2) e `vacanza-indonesia`, premi **archive** su ognuno. Restano on-chain, spariscono dalla Dashboard e dalla tendina di Spend. Verifica che sotto compaia «3 archived goals · show» e che la Dashboard mostri solo `summer-holiday` e `new-laptop`.
+- [ ] Saldi di partenza (letti dai contratti il 2026-09-12 alle 18:20): saver **9,3 USDC** su Fuji e **0,0033 ETH** su Sepolia · merchant **4,4 USDC** su Fuji e **0,003 ETH su Sepolia** · goal `summer-holiday` **2,8 USDC** su 20 di target (×4) · goal `new-laptop` **1,0 USDC** su 3000 (×2).
 
 ## 0:00 – 0:12 · Il problema
 
@@ -24,7 +27,7 @@ Il video deve aprirsi **senza login**. Parlato in inglese, come la UI. I numeri 
 
 ## 0:12 – 0:52 · L'arrotondamento, in diretta
 
-**Fai:** Spend → goal `vacanza-indonesia` → importo **4.30** → conferma.
+**Fai:** Spend → goal `summer-holiday` (è già selezionato: è l'ultimo creato) → importo **4.30** → conferma.
 
 > "I'm paying 4.30. My goal multiplies the change by four, and the app quotes it before I sign: the merchant gets 4.30, 2.80 goes into the goal. That number comes from the router contract, not from arithmetic in the browser."
 
@@ -40,7 +43,7 @@ Il video deve aprirsi **senza login**. Parlato in inglese, come la UI. I numeri 
 
 ## 1:17 – 1:47 · Pagare a un nome
 
-**Fai:** torna sul goal del saver e mostra il nome `vacanza-indonesia.mario.formica.eth`. Poi, **dal merchant** su Fuji: Receive → scrivi quel nome → **2.40** → conferma.
+**Fai:** torna sul goal del saver e mostra il nome `summer-holiday.mario.formica.eth`. Poi, **dal merchant** su Fuji: Receive → scrivi quel nome → **2.40** → conferma.
 
 > "My own goal already lives under my namespace, and its address record points to the vault on Avalanche using the chain-specific coin type. The name is on Sepolia, the money is on Avalanche, and nothing bridges: it's a pointer. So he pays me knowing only my name — and before anything moves, the app asks the factory on Fuji whether that address really is a Formica goal. 2.40 in: 0.80 to me, 1.60 rounded into the goal."
 
@@ -66,6 +69,10 @@ curl -H "Swarm-Only-Root-Chunk: true" \
 ## 2:40 – 3:00 · Chiusura onesta
 
 > "To be exact about privacy: the amounts are public on Avalanche, and that's the point — it's what makes them verifiable. What's private is what they mean. Next: move the ledger key from the app's origin to the identity so it follows you anywhere, and use Swarm's access control to share a goal with the people saving for it with you."
+
+## Se un giudice chiede dei goal archiviati
+
+Rispondi la verità: l'archiviazione è **una preferenza di vista, salvata nel browser**. Un goal non si può cancellare — il registro della factory è append-only — e l'etichetta è immutabile, quindi archiviare è l'unico modo di fare ordine. Il vault resta on-chain, resta suo, e si riapre dal suo indirizzo o dal pulsante «show».
 
 ## Da non dire mai
 

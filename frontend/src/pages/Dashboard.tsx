@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { useConnection, useWatchContractEvent } from 'wagmi'
 import { factoryAbi } from '../config/abis'
 import { FACTORY } from '../config/addresses'
 import { GoalCard } from '../components/GoalCard'
 import { Badge, Button, EmptyState, Skeleton } from '../components/ui'
 import { useAaveApy } from '../hooks/useAaveApy'
+import { useArchivedGoals } from '../hooks/useArchivedGoals'
 import { useUserGoals } from '../hooks/useGoals'
 
 export function Dashboard({ navigate }: { navigate: (path: string) => void }) {
@@ -11,6 +13,8 @@ export function Dashboard({ navigate }: { navigate: (path: string) => void }) {
   const owner = connection.address
   const goals = useUserGoals(owner)
   const apy = useAaveApy()
+  const archive = useArchivedGoals()
+  const [showArchived, setShowArchived] = useState(false)
 
   useWatchContractEvent({
     address: FACTORY,
@@ -22,6 +26,7 @@ export function Dashboard({ navigate }: { navigate: (path: string) => void }) {
   })
 
   const vaults = goals.data ?? []
+  const { visible, archived } = archive.partition(vaults)
 
   return (
     <div>
@@ -58,10 +63,29 @@ export function Dashboard({ navigate }: { navigate: (path: string) => void }) {
       )}
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {vaults.map((vault) => (
+        {visible.map((vault) => (
           <GoalCard key={vault} vault={vault} apy={apy} navigate={navigate} />
         ))}
       </div>
+
+      {archived.length > 0 && (
+        <div className="mt-6">
+          <button
+            onClick={() => setShowArchived((value) => !value)}
+            className="text-xs text-ink-mute underline decoration-dotted underline-offset-4 transition hover:text-ink-soft"
+          >
+            {archived.length} archived {archived.length === 1 ? 'goal' : 'goals'} ·{' '}
+            {showArchived ? 'hide' : 'show'}
+          </button>
+          {showArchived && (
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {archived.map((vault) => (
+                <GoalCard key={vault} vault={vault} apy={apy} navigate={navigate} archived />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
