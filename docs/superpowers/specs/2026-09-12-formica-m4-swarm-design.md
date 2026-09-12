@@ -52,9 +52,9 @@ Tutto deriva da `client.deriveAppSecret(label)`, che l'SDK 0.4.1 espone come `(l
 |---|---|
 | chiave di firma del feed | `deriveAppSecret('formica-ledger-signer')` → chiave privata a 32 byte |
 | indirizzo proprietario del feed | `privateKeyToAccount(signer).address` (viem), uguale su ogni dispositivo |
-| chiave di cifratura | `deriveAppSecret('formica-ledger-enc')` → AES-GCM 256 via WebCrypto |
+| chiave di cifratura | `deriveAppSecret('formica-ledger-enc')` → 32 byte passati a Swarm |
 
-Il payload scritto sul feed è `IV (12 byte) ‖ ciphertext`, con IV casuale a ogni aggiornamento. **Cifriamo noi**, con WebCrypto, invece di affidarci solo alla cifratura di chunk di Swarm: così la garanzia è nostra e verificabile in demo — chiunque scarichi il riferimento da un gateway pubblico ottiene byte illeggibili.
+La cifratura è quella di Swarm, ma **con la nostra chiave**: `uploadRawPayload(data, { encryptionKey })` e `downloadRawPayload({ encryptionKey })` accettano entrambi una chiave a 32 byte fornita da noi (verificato nei type dell'SDK 0.4.1). Niente crittografia fatta in casa: meno codice e meno modi di sbagliare, e la chiave resta derivata dall'account, quindi nessun altro può decifrare. Attenzione a non usare `uploadPayload`, che genera una chiave casuale e la restituisce: sarebbe da conservare da qualche parte, e quel qualche parte non esiste.
 
 ## 5. Il feed e il nome
 
