@@ -13,7 +13,7 @@ Names for Formica live on the **ENSv2 beta deployment on Sepolia**. Money stays 
 | Expiry | 1820722116 (2027-09-12) |
 | Token id in ETHRegistry | `0x58b969c8a4ae5cc5f401f8ddd0b98d3a0b6ac57adf71b32217a1361b00000000` (labelhash of `formica`, low 32 bits cleared) |
 | Resolver | `0x2f2E8141554B966156934958eC380E6881a22Fd5` |
-| Subregistry | not set yet — M2 installs `FormicaRegistrar` here, so each user gets `<user>.formica.eth` and each goal a `<goal>.<user>.formica.eth` subname |
+| Subregistry | [`0x9dE5F9cd978caB5fb07717e6014131E9E1f0D651`](https://sepolia.etherscan.io/address/0x9dE5F9cd978caB5fb07717e6014131E9E1f0D651) — impostato dal setup M2 il 2026-09-12: il subregistry di formica.eth è impostato e i nomi risolvono |
 
 The registration was relayed (sponsored) by the ENS beta app, so the transaction was sent by `0x46565eEdB0BB948ae787dd105ccE300F736dA28E`, not by the owner wallet. Ownership is verifiable on-chain:
 
@@ -22,6 +22,26 @@ cast call 0xbdc85dd5b15d7ecb354cd7cb6f2c50b4f2c4f0e2 'ownerOf(uint256)(address)'
   0x58b969c8a4ae5cc5f401f8ddd0b98d3a0b6ac57adf71b32217a1361b00000000 --rpc-url sepolia
 # -> 0x6567810126db7b1Fc9F0ebaf2D9962767387CB5f
 ```
+
+## M2 setup (2026-09-12, block 11688629)
+
+Il namespace è pronto: `FormicaRegistrar` è autorizzato sul registry di `formica.eth` e ogni utente che chiama `claim(label)` ottiene `<label>.formica.eth` con registry e resolver propri, di cui è root. Gli indirizzi sono in [`contracts/deployments/sepolia-ens.json`](../contracts/deployments/sepolia-ens.json).
+
+| Cosa | Indirizzo |
+|---|---|
+| UserRegistry di `formica.eth` | [`0x9dE5F9cd978caB5fb07717e6014131E9E1f0D651`](https://sepolia.etherscan.io/address/0x9dE5F9cd978caB5fb07717e6014131E9E1f0D651) |
+| FormicaRegistrar | [`0xe31c0b4AF6F1c8F8b7279e6AfdD6bD178799E5f3`](https://sepolia.etherscan.io/address/0xe31c0b4AF6F1c8F8b7279e6AfdD6bD178799E5f3) |
+
+Transazioni di setup:
+
+| Passo | Tx |
+|---|---|
+| Deploy del registry di `formica.eth` | [`0x7ee8336f…9064670`](https://sepolia.etherscan.io/tx/0x7ee8336f491817f3c586deaa716756beda95782a175101e156d54f6199064670) |
+| `setSubregistry(formica)` | [`0x335aae07…63743bb`](https://sepolia.etherscan.io/tx/0x335aae07ce010846fb2bf31faa9fe795927b7941364a52199829c5d1863743bb) |
+| Deploy di `FormicaRegistrar` | [`0x74f0b2bb…2a803ab`](https://sepolia.etherscan.io/tx/0x74f0b2bb1e18c1c98fc2b80b77a147fc3bea603f036ec02d35d758dee2a803ab) |
+| `grantRootRoles(ROLE_REGISTRAR\|ROLE_RENEW)` | [`0xbfcd1e21…b4580e2`](https://sepolia.etherscan.io/tx/0xbfcd1e212ba1c73a09de5c73807d18560ec627b7dafb1e31f5151b3a5b4580e2) |
+
+Verifica: il subregistry di `formica.eth` è impostato: i nomi risolvono. `FormicaRegistrar` detiene `ROLE_REGISTRAR | ROLE_RENEW` sul root del registry; il wallet è root con `ALL_ROLES`.
 
 ## ENSv2 beta contracts used (Sepolia)
 

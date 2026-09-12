@@ -1,0 +1,7 @@
+{
+  "chainId": 11155111,
+  "ethRegistry": "0xBDC85dD5b15D7ecb354cd7cb6f2c50b4f2c4F0E2",
+  "formicaRegistrar": "0xe31c0b4AF6F1c8F8b7279e6AfdD6bD178799E5f3",
+  "formicaRegistry": "0x9dE5F9cd978caB5fb07717e6014131E9E1f0D651",
+  "setupBlock": 11688629
+}
