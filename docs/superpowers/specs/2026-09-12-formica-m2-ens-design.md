@@ -52,6 +52,18 @@ function setText(bytes32 node, string key, string value) external;        // ric
 
 Ruoli del registry: `ROLE_REGISTRAR = 1 << 0`, `ROLE_RENEW = 1 << 16`, `ROLE_SET_SUBREGISTRY = 1 << 20`, `ROLE_SET_RESOLVER = 1 << 24`. Ogni ruolo ha il suo admin a `role << 128`. `expiry` è un timestamp assoluto, non una durata.
 
+**Bitmap usate, esplicite (niente "roleBitmap" generico nel codice):**
+
+| Dove | Bitmap | Perché |
+|---|---|---|
+| `initialize` dei registry e dei resolver (Formica e utente) | `ALL_ROLES = 0x1111…1111` (32 nibble `1`, come nella doc ENS) | il root tiene ogni ruolo e il suo admin, così può delegare e revocare |
+| `register` di `mario` dentro `formica.eth` | `ROLE_SET_SUBREGISTRY \| ROLE_SET_RESOLVER \| ROLE_RENEW` più i rispettivi admin (`<< 128`) | l'utente governa il proprio nome: può cambiare registry, resolver e rinnovare |
+| `register` di `vacanza` dentro il registry utente | stessa bitmap | coerenza, e permette al goal di avere a sua volta sottonomi |
+
+Le interfacce dei contratti ENS (`IVerifiableFactory`, `IPermissionedRegistry`, `IPermissionedResolver`) le scriviamo noi come sottoinsiemi minimi, esattamente come `IPool` per Aave in M0: solo le funzioni che chiamiamo.
+
+**Salt per i proxy:** `deployProxy` calcola `outerSalt = keccak256(abi.encode(msg.sender, salt))`, e `msg.sender` è il registrar. Quindi il salt interno deve distinguere utente e tipo: `keccak256(abi.encode(owner, label, "registry"))` e `keccak256(abi.encode(owner, label, "resolver"))`.
+
 **coinType di Avalanche Fuji (ENSIP-11):** `0x80000000 | 43113` = **2147526761**.
 
 ## 3. Gerarchia
@@ -100,8 +112,8 @@ contract FormicaRegistrar {
 
 ## 6. Nome di un goal (due tx, dal frontend)
 
-1. `registryUtente.register("vacanza", utente, IRegistry(0), resolverUtente, roleBitmap, expiry)`
-2. `resolverUtente.setAddr(namehash("vacanza.mario.formica.eth"), 2147526761, abi.encodePacked(vault))`
+1. `registryUtente.register("vacanza", utente, IRegistry(0), resolverUtente, bitmap della tabella §2, block.timestamp + 365 giorni)`
+2. `resolverUtente.setAddr(node, 2147526761, abi.encodePacked(vault))`, dove `node` è `namehash("vacanza.mario.formica.eth")` calcolato nel frontend con `namehash` di viem
 
 Se resta tempo: `setText` con `formica.mode`, `formica.multiplier`, `formica.target`. I record sono per scoperta e UX: **la fonte di verità dei parametri resta il vault su Fuji**, che l'app legge comunque.
 
