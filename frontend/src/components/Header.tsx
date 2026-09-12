@@ -7,6 +7,7 @@ const TABS: { label: string; path: string; route: Route['name'] }[] = [
   { label: 'Crea goal', path: '/create', route: 'create' },
   { label: 'Spendi', path: '/spend', route: 'spend' },
   { label: 'Incassa', path: '/receive', route: 'receive' },
+  { label: 'Nomi', path: '/names', route: 'names' },
 ]
 
 export function Header({ current, navigate }: { current: Route['name']; navigate: (path: string) => void }) {

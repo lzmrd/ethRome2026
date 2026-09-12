@@ -1,21 +1,26 @@
 import type { Address } from 'viem'
 import { useReadContract, useReadContracts } from 'wagmi'
 import { factoryAbi, vaultAbi } from '../config/abis'
-import { FACTORY } from '../config/addresses'
+import { FACTORY, FUJI_CHAIN_ID } from '../config/addresses'
+import { SEPOLIA_CHAIN_ID } from '../config/ens'
 
-export function useUserGoals(owner?: Address) {
+type QueryChainId = typeof FUJI_CHAIN_ID | typeof SEPOLIA_CHAIN_ID
+
+export function useUserGoals(owner?: Address, chainId?: QueryChainId) {
   return useReadContract({
     address: FACTORY,
     abi: factoryAbi,
     functionName: 'goalsOf',
     args: owner ? [owner] : undefined,
+    chainId,
     query: { enabled: Boolean(owner), refetchInterval: 15_000 },
   })
 }
 
-export function useVaultLabels(vaults: readonly Address[]) {
+export function useVaultLabels(vaults: readonly Address[], chainId?: QueryChainId) {
   const query = useReadContracts({
     contracts: vaults.map((vault) => ({ address: vault, abi: vaultAbi, functionName: 'label' }) as const),
+    chainId,
     query: { enabled: vaults.length > 0 },
   })
   return {

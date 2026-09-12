@@ -4,9 +4,11 @@ import { useConnection, useReadContract } from 'wagmi'
 import { useQueryClient } from '@tanstack/react-query'
 import { factoryAbi, vaultAbi } from '../config/abis'
 import { FACTORY, SNOWTRACE_ADDRESS, SNOWTRACE_TX } from '../config/addresses'
+import { ENS_EXPLORER, FORMICA_REGISTRAR, FORMICA_ROOT, SEPOLIA_CHAIN_ID, ensRegistrarAbi } from '../config/ens'
 import { ProgressBar } from '../components/ProgressBar'
 import { TxStatus } from '../components/TxStatus'
 import { useAaveApy } from '../hooks/useAaveApy'
+import { useGoalTarget } from '../hooks/useEnsGoal'
 import { useGoalBalance, useGoalMeta } from '../hooks/useGoals'
 import { useVaultEvents } from '../hooks/useVaultEvents'
 import { formatDate, formatUsdc, parseUsdc, shortAddress } from '../lib/format'
@@ -33,6 +35,20 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
 
   const connected = connection.address
   const isOwner = Boolean(meta.owner && connected && meta.owner.toLowerCase() === connected.toLowerCase())
+
+  const ensLabel = useReadContract({
+    address: FORMICA_REGISTRAR,
+    abi: ensRegistrarAbi,
+    functionName: 'labelOf',
+    args: connected ? [connected] : undefined,
+    chainId: SEPOLIA_CHAIN_ID,
+    query: { enabled: Boolean(connected) },
+  })
+  const userLabel = ensLabel.data && ensLabel.data.length > 0 ? ensLabel.data : undefined
+  const goalName = userLabel && meta.label ? `${meta.label}.${userLabel}.${FORMICA_ROOT}` : ''
+  const target = useGoalTarget(goalName)
+  const verifiedName =
+    target.vault && vault && target.vault.toLowerCase() === vault.toLowerCase() ? goalName : undefined
 
   const [amountInput, setAmountInput] = useState('')
   const amount = parseUsdc(amountInput)
@@ -113,6 +129,16 @@ export function GoalDetail({ address, navigate }: { address: string; navigate: (
           >
             {address}
           </a>
+          {verifiedName && (
+            <a
+              className="mt-1 block font-mono text-xs text-amber-400 underline decoration-dotted"
+              href={`${ENS_EXPLORER}${verifiedName}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              {verifiedName}
+            </a>
+          )}
         </div>
         <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300">
           {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '-'}

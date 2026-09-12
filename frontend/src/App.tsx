@@ -4,6 +4,7 @@ import { useHashRoute } from './lib/hashRoute'
 import { CreateGoal } from './pages/CreateGoal'
 import { Dashboard } from './pages/Dashboard'
 import { GoalDetail } from './pages/GoalDetail'
+import { Names } from './pages/Names'
 import { Receive } from './pages/Receive'
 import { Spend } from './pages/Spend'
 
@@ -21,6 +22,7 @@ export function App() {
           {route.name === 'receive' && <Receive />}
           {route.name === 'goal' && <GoalDetail address={route.address} navigate={navigate} />}
         </ChainGuard>
+        {route.name === 'names' && <Names />}
       </main>
     </div>
   )
