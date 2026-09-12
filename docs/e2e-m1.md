@@ -15,7 +15,7 @@ Eseguita a mano dal browser (MetaMask su Avalanche Fuji) contro i contratti in `
 | 7 | Dettaglio goal | saldo = maxWithdraw, yield ≥ 0, APY live, storico Deposit/Withdraw | ✅ storico e link Snowtrace corretti | — |
 | 8 | Preleva 1.00 | USDC indietro, saldo goal −1.00, evento Withdraw | ✅ | [`0xc7184acb…c30a81`](https://testnet.snowtrace.io/tx/0xc7184acb2fd9f13fe865a80b681d18b6f62f6a1c18b46919e51a0a86bdc30a81) |
 | 9 | Preleva tutto | saldo 0.00, yield mostrato 0 (non ~2), nessuna share residua | ✅ `totalAssets` 0, `netDeposited` 0, share 0, aUSDC 0 | [`0x91e77bca…085e98`](https://testnet.snowtrace.io/tx/0x91e77bcaa8eab6c0f5adafd7f3e7c1e71691aab1c4066768a7174c5955085e98) |
-| 10 | Errore guidato: spendi oltre il saldo | pulsante disabilitato con motivo, nessuna tx | ✅ pre-check saldo/allowance, nessuna tx inviata | — |
+| 10 | Errore guidato: spendi oltre il saldo | pulsante disabilitato con motivo, nessuna tx | ☐ non provato a mano (il pre-check saldo/allowance è nel codice, ma nessuno ha osservato il comportamento) | — |
 
 **Bilancio finale, verificato on-chain dopo i dieci passi:** saver 10,80 USDC · merchant 8,30 USDC · vault `vacanza-indonesia` 1,20 USDC con `netDeposited` 1,20 · **router 0**, nessun residuo trattenuto.
 
