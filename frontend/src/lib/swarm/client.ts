@@ -14,12 +14,27 @@ export type LedgerKeys = {
 let instance: SwarmIdClient | undefined
 let ready: Promise<SwarmIdClient> | undefined
 
-export function getSwarmClient(onChange?: () => void): Promise<SwarmIdClient> {
+/**
+ * Ascoltatori vivi, non la callback del primo mount: React StrictMode smonta e
+ * rimonta gli effetti, e una callback catturata resterebbe legata al primo.
+ */
+const listeners = new Set<() => void>()
+
+export function subscribeSwarm(listener: () => void): () => void {
+  listeners.add(listener)
+  return () => {
+    listeners.delete(listener)
+  }
+}
+
+export function getSwarmClient(): Promise<SwarmIdClient> {
   if (ready) return ready
   instance = new SwarmIdClient({
     iframeOrigin: SWARM_IFRAME_ORIGIN,
     metadata: { name: 'Formica', description: 'Risparmia arrotondando le spese' },
-    onConnectionChange: () => onChange?.(),
+    onConnectionChange: () => {
+      for (const listener of listeners) listener()
+    },
   })
   ready = instance.initialize().then(() => instance as SwarmIdClient)
   return ready

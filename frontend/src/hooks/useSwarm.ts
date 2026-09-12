@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ConnectionInfo, SwarmIdClient } from '@snaha/swarm-id'
-import { deriveLedgerKeys, getSwarmClient, type LedgerKeys } from '../lib/swarm/client'
+import { deriveLedgerKeys, getSwarmClient, subscribeSwarm, type LedgerKeys } from '../lib/swarm/client'
 
 /** Il callback di connessione arriva fuori da React: serve il client a portata di mano. */
 let instanceRef: SwarmIdClient | undefined
@@ -13,18 +13,21 @@ export function useSwarm() {
 
   useEffect(() => {
     let alive = true
-    getSwarmClient(() => {
+    const publish = () => {
       if (alive && instanceRef) setInfo({ ...instanceRef.connectionInfo })
-    })
+    }
+    const unsubscribe = subscribeSwarm(publish)
+    getSwarmClient()
       .then((c) => {
-        if (!alive) return
         instanceRef = c
+        if (!alive) return
         setClient(c)
-        setInfo({ ...c.connectionInfo })
+        publish()
       })
       .catch(() => undefined)
     return () => {
       alive = false
+      unsubscribe()
     }
   }, [])
 
