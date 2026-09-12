@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { isAddress, maxUint256, type Address } from 'viem'
-import { useConnection, useReadContract } from 'wagmi'
+import { maxUint256 } from 'viem'
+import { useConnection } from 'wagmi'
 import { useQueryClient } from '@tanstack/react-query'
-import { erc20Abi, factoryAbi, routerAbi } from '../config/abis'
-import { FACTORY, ROUTER, USDC } from '../config/addresses'
+import { erc20Abi, routerAbi } from '../config/abis'
+import { ROUTER, USDC } from '../config/addresses'
 import { TxStatus } from '../components/TxStatus'
+import { useGoalTarget } from '../hooks/useEnsGoal'
 import { useGoalMeta } from '../hooks/useGoals'
 import { useRoundDownQuote, useRouterAllowance, useUsdcBalance } from '../hooks/useUsdc'
 import { formatUsdc, parseUsdc, shortAddress } from '../lib/format'
@@ -18,16 +19,8 @@ export function Receive() {
   const [vaultInput, setVaultInput] = useState('')
   const [amountInput, setAmountInput] = useState('')
 
-  const vaultValid = isAddress(vaultInput.trim())
-  const vault = vaultValid ? (vaultInput.trim() as Address) : undefined
-
-  const isVault = useReadContract({
-    address: FACTORY,
-    abi: factoryAbi,
-    functionName: 'isVault',
-    args: vault ? [vault] : undefined,
-    query: { enabled: Boolean(vault) },
-  })
+  const target = useGoalTarget(vaultInput)
+  const vault = target.vault
 
   const meta = useGoalMeta(vault)
   const amount = parseUsdc(amountInput)
@@ -56,7 +49,8 @@ export function Receive() {
     Boolean(payer) && needsApproval === true && !['simulating', 'signing', 'mining'].includes(approval.phase)
   const canSend =
     Boolean(payer && vault) &&
-    isVault.data === true &&
+    !target.error &&
+    !target.isLoading &&
     amount !== undefined &&
     amount > 0n &&
     saving !== undefined &&
@@ -95,18 +89,18 @@ export function Receive() {
 
       <div className="mt-6 space-y-4">
         <label className="block">
-          <span className="text-sm text-neutral-300">Vault del destinatario</span>
+          <span className="text-sm text-neutral-300">Nome ENS o indirizzo del goal</span>
           <input
             value={vaultInput}
             onChange={(event) => setVaultInput(event.target.value)}
-            placeholder="0x…"
+            placeholder="vacanza.mario.formica.eth"
             className="mt-1 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 font-mono text-xs outline-none focus:border-amber-500"
           />
-          {vaultInput.trim() !== '' && !vaultValid && (
-            <span className="mt-1 block text-xs text-red-400">Indirizzo non valido.</span>
-          )}
-          {isVault.data === false && (
-            <span className="mt-1 block text-xs text-red-400">Non è un vault registrato nella factory.</span>
+          {target.error && <span className="mt-1 block text-xs text-red-400">{target.error}</span>}
+          {target.kind === 'name' && target.vault && (
+            <span className="mt-1 block text-xs text-neutral-500">
+              {target.name} → {shortAddress(target.vault)}
+            </span>
           )}
           {meta.label !== undefined && meta.owner !== undefined && (
             <span className="mt-1 block text-xs text-neutral-500">
