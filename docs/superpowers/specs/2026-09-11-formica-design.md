@@ -243,6 +243,8 @@ Per i test: `MockPool` (supply/withdraw 1:1 con un `MockERC20` come aToken, yiel
 
 ## 6. ENSv2 su Sepolia
 
+> **Superato dal design di M2:** `docs/superpowers/specs/2026-09-12-formica-m2-ens-design.md` (2026-09-12) contiene le firme verificate, gli indirizzi beta e il flusso approvato. Questa sezione resta per il contesto e per lo schema dei record (§6.5).
+
 Riferimenti: [registry template](https://docs.ens.domains/ensv2/registry-template), [contract developers](https://docs.ens.domains/ensv2/tutorial-contract-developers), [deployments](https://docs.ens.domains/learn/deployments). **Contratti beta, non finali: da pinnare il commit di `contracts-v2` usato.**
 
 ### 6.1 Gerarchia
