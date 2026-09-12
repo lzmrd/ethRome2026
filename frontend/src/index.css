@@ -1,12 +1,75 @@
 @import "tailwindcss";
 
+/* Design tokens. Everything visual comes from here, so a change of palette is
+   one edit and not a hunt through the pages. */
+@theme {
+  --color-canvas: #08080a;
+  --color-surface: #101013;
+  --color-raised: #17171c;
+  --color-line: #23232a;
+  --color-line-strong: #34343e;
+  --color-ink: #f7f7f8;
+  --color-ink-soft: #a6a6b0;
+  --color-ink-mute: #6f6f7b;
+  --color-brand: #f5a524;
+  --color-brand-soft: #fbbf24;
+  --color-good: #34d399;
+  --color-bad: #f87171;
+
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 :root {
   color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background-color: #0a0a0a;
-  color: #fafafa;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background-color: var(--color-canvas);
+  /* Due aloni molto tenui danno profondita' senza immagini da scaricare. */
+  background-image:
+    radial-gradient(70rem 40rem at 15% -10%, rgba(245, 165, 36, 0.07), transparent 60%),
+    radial-gradient(50rem 30rem at 100% 0%, rgba(120, 120, 255, 0.05), transparent 55%);
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3 {
+  letter-spacing: -0.015em;
+}
+
+/* In un'app di soldi le cifre devono stare incolonnate: senza questo, un saldo
+   che cambia fa ballare la riga. */
+.tnum,
+input[inputmode="decimal"] {
+  font-variant-numeric: tabular-nums;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* La tastiera non deve spostare il layout, ma il mouse non deve vedere anelli. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

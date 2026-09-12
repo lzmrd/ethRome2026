@@ -1,5 +1,6 @@
 import type { Address } from 'viem'
 import { ProgressBar } from './ProgressBar'
+import { Badge, Skeleton } from './ui'
 import { formatUsdc, shortAddress } from '../lib/format'
 import { useGoalBalance, useGoalMeta } from '../hooks/useGoals'
 
@@ -29,25 +30,31 @@ export function GoalCard({
   return (
     <button
       onClick={() => navigate(`/goal/${vault}`)}
-      className="w-full rounded-xl border border-neutral-800 bg-neutral-900 p-4 text-left transition hover:border-neutral-600"
+      className="group w-full rounded-2xl border border-line bg-surface/80 p-5 text-left shadow-[0_12px_32px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm transition duration-200 ease-soft hover:-translate-y-0.5 hover:border-line-strong hover:bg-raised/80"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold">{meta.label ?? shortAddress(vault)}</h3>
-          <p className="text-xs text-neutral-500">{shortAddress(vault)}</p>
+        <div className="min-w-0">
+          <h3 className="truncate font-semibold">{meta.label ?? shortAddress(vault)}</h3>
+          <p className="tnum truncate text-xs text-ink-mute">{shortAddress(vault)}</p>
         </div>
-        <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-xs text-neutral-300">
-          {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '-'}
-        </span>
+        <Badge tone={meta.mode === 1 ? 'brand' : 'neutral'}>
+          {meta.mode === 1 ? 'Yield · Aave' : 'Liquid'} · x{meta.multiplier ?? '–'}
+        </Badge>
       </div>
 
-      <div className="mt-4 flex items-end justify-between">
-        <p className="text-2xl font-bold">
-          {balance === undefined ? '…' : `${formatUsdc(balance)} USDC`}
+      <div className="mt-5 flex items-end justify-between gap-3">
+        <p className="tnum text-3xl font-bold tracking-tight">
+          {balance === undefined ? (
+            <Skeleton className="h-7 w-28" />
+          ) : (
+            <>
+              {formatUsdc(balance)} <span className="text-base font-medium text-ink-mute">USDC</span>
+            </>
+          )}
         </p>
-        <p className="text-xs text-neutral-400">
+        <p className="tnum shrink-0 text-xs text-ink-soft">
           {meta.target !== undefined && meta.target > 0n
-            ? `target ${formatUsdc(meta.target)} USDC`
+            ? `${progress === undefined ? '' : `${progress.toFixed(0)}% of `}${formatUsdc(meta.target)}`
             : 'no target'}
         </p>
       </div>
@@ -56,9 +63,11 @@ export function GoalCard({
         <ProgressBar value={progress} />
       </div>
 
-      <div className="mt-3 flex justify-between text-xs text-neutral-400">
-        <span>yield {earned === undefined ? '…' : `+${formatUsdc(earned, 4)} USDC`}</span>
-        {meta.mode === 1 && apy !== undefined && <span>Aave APY {apy.toFixed(2)}%</span>}
+      <div className="mt-3 flex justify-between text-xs text-ink-mute">
+        <span className="tnum">
+          yield {earned === undefined ? '…' : `+${formatUsdc(earned, 4)} USDC`}
+        </span>
+        {meta.mode === 1 && apy !== undefined && <span className="tnum">Aave APY {apy.toFixed(2)}%</span>}
       </div>
     </button>
   )
